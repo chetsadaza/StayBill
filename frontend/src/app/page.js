@@ -198,7 +198,7 @@ export default function Dashboard() {
       {/* Grid Stats */}
       <div className="grid-cols-4">
         {statCards.map((card, idx) => (
-          <div key={idx} className="glass-card stat-card">
+          <div key={idx} className="glass-card stat-card" style={{ position: 'relative' }}>
             <div className="stat-card-header">
               <span className="stat-card-title">{card.title}</span>
               <div 
@@ -211,6 +211,13 @@ export default function Dashboard() {
                 {card.icon}
               </div>
             </div>
+            {idx === 1 && (
+              <img 
+                src="/images/media_card.png" 
+                alt="Peeking panda" 
+                className="dashboard-card-panda"
+              />
+            )}
             <div>
               <h3 className="stat-card-value">{card.value}</h3>
               <p className="stat-card-sub">{card.sub}</p>

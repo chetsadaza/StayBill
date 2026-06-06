@@ -1022,5 +1022,26 @@ h1, h2, h3, h4, h5, h6 {
   text-align: center !important;
 }
 
+/* Peeking panda on dashboard cards */
+.dashboard-card-panda {
+  position: absolute;
+  top: -42px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: auto;
+  pointer-events: none;
+  z-index: 10;
+  animation: pandaPeekCard 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
 
-
+@keyframes pandaPeekCard {
+  0% {
+    transform: translateX(-50%) translateY(20px) scale(0.6);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+}
