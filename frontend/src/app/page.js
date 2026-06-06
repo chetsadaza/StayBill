@@ -229,17 +229,17 @@ export default function Dashboard() {
       {/* Charts Grid */}
       <div className="charts-grid">
         {/* Revenue Chart */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', minWidth: 0 }}>
           <h3 style={{ fontSize: '1.15rem' }}>รายงานรายรับรายเดือน ปี {new Date().getFullYear() + 543}</h3>
-          <div style={{ height: '300px', position: 'relative' }}>
+          <div style={{ height: '300px', position: 'relative', width: '100%' }}>
             <Bar data={barChartData} options={chartOptions} />
           </div>
         </div>
 
         {/* Room Doughnut */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', minWidth: 0 }}>
           <h3 style={{ fontSize: '1.15rem' }}>อัตราการเข้าพัก</h3>
-          <div style={{ height: '240px', position: 'relative', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ height: '240px', position: 'relative', display: 'flex', justifyContent: 'center', width: '100%' }}>
             <Doughnut data={donutChartData} options={doughnutOptions} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '8px 16px', fontSize: '0.85rem' }}>
