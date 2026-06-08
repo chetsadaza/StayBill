@@ -161,28 +161,36 @@ export default function RoomsPage() {
         <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>สถานะห้อง:</span>
         <div className="filter-options">
           {[
-            { label: 'ทั้งหมด', value: '' },
-            { label: 'ว่าง', value: 'available' },
-            { label: 'มีผู้เช่า', value: 'occupied' },
-            { label: 'ซ่อมบำรุง', value: 'maintenance' }
-          ].map((filter) => (
-            <button
-              key={filter.value}
-              className={`btn ${statusFilter === filter.value ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ padding: '6px 16px', fontSize: '0.85rem' }}
-              onClick={() => setStatusFilter(filter.value)}
-            >
-              {filter.label}
-            </button>
-          ))}
+            { label: 'ทั้งหมด', value: '', img: '/images/3.png', pandaClass: 'filter-bar-panda' },
+            { label: 'ว่าง', value: 'available', img: '/images/4.png', pandaClass: 'filter-bar-panda-available' },
+            { label: 'มีผู้เช่า', value: 'occupied', img: '/images/5.png', pandaClass: 'filter-bar-panda-occupied' },
+            { label: 'ซ่อมบำรุง', value: 'maintenance', img: '/images/6.png', pandaClass: 'filter-bar-panda-maintenance' }
+          ].map((filter) => {
+            const isActive = statusFilter === filter.value;
+            return (
+              <button
+                key={filter.value}
+                className={`btn ${isActive ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ 
+                  padding: '6px 16px', 
+                  fontSize: '0.85rem',
+                  position: 'relative',
+                  overflow: 'visible'
+                }}
+                onClick={() => setStatusFilter(filter.value)}
+              >
+                {filter.label}
+                {isActive && filter.img && (
+                  <img 
+                    src={filter.img} 
+                    alt="Panda filter mascot" 
+                    className={filter.pandaClass} 
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
-        {statusFilter === '' && (
-          <img 
-            src="/images/3.png" 
-            alt="Cheering panda" 
-            className="filter-bar-panda" 
-          />
-        )}
       </div>
 
       {/* Rooms display */}

@@ -1244,8 +1244,39 @@ select.form-input option {
 /* Peeking cheering panda on filter bar */
 .filter-bar-panda {
   position: absolute;
-  bottom: -32px;
-  left: 110px;
+  top: calc(100% - 14px);
+  left: 50%;
+  width: 65px;
+  height: auto;
+  pointer-events: none;
+  z-index: 10;
+  transform-origin: top center;
+  animation: pandaPeekFilter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes pandaPeekFilter {
+  0% {
+    transform: translateX(-50%) translateY(20px) scale(0.6);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 576px) {
+  .filter-bar-panda {
+    width: 55px;
+  }
+}
+
+/* Peeking cheering panda holding "ว่าง" or "มีผู้เช่า" sign on filter bar */
+.filter-bar-panda-available,
+.filter-bar-panda-occupied {
+  position: absolute;
+  bottom: calc(100% - 6px);
+  left: 50%;
   width: 65px;
   height: auto;
   pointer-events: none;
@@ -1254,21 +1285,23 @@ select.form-input option {
   animation: pandaPeekFilter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-@keyframes pandaPeekFilter {
-  0% {
-    transform: translateY(20px) scale(0.6);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
+/* Peeking cheering panda lying on a bamboo branch on filter bar */
+.filter-bar-panda-maintenance {
+  position: absolute;
+  bottom: calc(100% - 14px);
+  left: 50%;
+  width: 65px;
+  height: auto;
+  pointer-events: none;
+  z-index: 10;
+  transform-origin: bottom center;
+  animation: pandaPeekFilter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 @media (max-width: 576px) {
-  .filter-bar-panda {
-    left: 20px;
-    bottom: -28px;
+  .filter-bar-panda-available,
+  .filter-bar-panda-occupied,
+  .filter-bar-panda-maintenance {
     width: 55px;
   }
 }
