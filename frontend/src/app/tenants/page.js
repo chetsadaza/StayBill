@@ -315,8 +315,24 @@ export default function TenantsPage() {
             {tenants.map((tenant) => {
               const name = `${tenant.firstName} ${tenant.lastName}`;
               return (
-                <div key={tenant._id} className="mobile-card">
-                  <div className="mobile-card-header">
+                <div key={tenant._id} className="mobile-card" style={{ position: 'relative', overflow: 'hidden' }}>
+                  <img 
+                    src="/images/7.png" 
+                    alt="Panda corner watermark" 
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'bottom left',
+                      pointerEvents: 'none',
+                      zIndex: 0,
+                      opacity: 0.65
+                    }}
+                  />
+                  <div className="mobile-card-header" style={{ position: 'relative', zIndex: 1 }}>
                     <span className="mobile-card-title">{name}</span>
                     {tenant.isActive ? (
                       <span className="badge badge-success">กำลังเช่า</span>
@@ -324,7 +340,7 @@ export default function TenantsPage() {
                       <span className="badge badge-danger">ย้ายออกแล้ว</span>
                     )}
                   </div>
-                  <div className="mobile-card-body">
+                  <div className="mobile-card-body" style={{ position: 'relative', zIndex: 1 }}>
                     <div className="mobile-card-row">
                       <span className="mobile-card-label">ห้องพัก:</span>
                       <span className="mobile-card-value">
@@ -348,7 +364,7 @@ export default function TenantsPage() {
                       <span className="mobile-card-value">{formatDate(tenant.moveInDate)}</span>
                     </div>
                   </div>
-                  <div className="mobile-card-actions">
+                  <div className="mobile-card-actions" style={{ position: 'relative', zIndex: 1 }}>
                     <button 
                       className="btn btn-secondary" 
                       onClick={() => handleOpenEditModal(tenant)}
