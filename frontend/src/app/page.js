@@ -200,7 +200,12 @@ export default function Dashboard() {
           <img 
             src="/images/1.png" 
             alt="Panda mascot holding house" 
-            className="dashboard-header-mascot"
+            className="dashboard-header-mascot mascot-light"
+          />
+          <img 
+            src="/images/2.png" 
+            alt="Panda mascot holding house dark" 
+            className="dashboard-header-mascot mascot-dark"
           />
         </div>
 
