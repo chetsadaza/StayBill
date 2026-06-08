@@ -189,48 +189,51 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* Title */}
-      <div className="dashboard-header-container" style={{ position: 'relative' }}>
-        <div>
-          <h2 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>ภาพรวมระบบจัดการหอพัก</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>สรุปข้อมูล สถิติ และบิลค่าเช่าล่าสุด</p>
+      {/* Title & Stats Hero Banner */}
+      <div className="dashboard-hero-container">
+        {/* Title */}
+        <div className="dashboard-header-container" style={{ position: 'relative' }}>
+          <div>
+            <h2 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>ภาพรวมระบบจัดการหอพัก</h2>
+            <p style={{ color: 'var(--hero-text-secondary, var(--text-secondary))' }}>สรุปข้อมูล สถิติ และบิลค่าเช่าล่าสุด</p>
+          </div>
+          <img 
+            src="/images/1.png" 
+            alt="Panda mascot holding house" 
+            className="dashboard-header-mascot"
+          />
         </div>
-        <img 
-          src="/images/1.png" 
-          alt="Panda mascot holding house" 
-          className="dashboard-header-mascot"
-        />
-      </div>
 
-      {/* Grid Stats */}
-      <div className="grid-cols-4">
-        {statCards.map((card, idx) => (
-          <div key={idx} className="glass-card stat-card" style={{ position: 'relative' }}>
-            <div className="stat-card-header">
-              <span className="stat-card-title">{card.title}</span>
-              <div
-                className="stat-card-icon-wrap"
-                style={{
-                  color: card.color,
-                  background: `rgba(${card.color === '#6366f1' ? '99,102,241' : card.color === '#8b5cf6' ? '139,92,246' : card.color === '#10b981' ? '16,185,129' : '245,158,11'}, 0.15)`
-                }}
-              >
-                {card.icon}
+        {/* Grid Stats */}
+        <div className="grid-cols-4">
+          {statCards.map((card, idx) => (
+            <div key={idx} className="glass-card stat-card" style={{ position: 'relative' }}>
+              <div className="stat-card-header">
+                <span className="stat-card-title">{card.title}</span>
+                <div
+                  className="stat-card-icon-wrap"
+                  style={{
+                    color: card.color,
+                    background: `rgba(${card.color === '#6366f1' ? '99,102,241' : card.color === '#8b5cf6' ? '139,92,246' : card.color === '#10b981' ? '16,185,129' : '245,158,11'}, 0.15)`
+                  }}
+                >
+                  {card.icon}
+                </div>
+              </div>
+              {idx === 1 && (
+                <img
+                  src="/images/media_card.png"
+                  alt="Peeking panda"
+                  className="dashboard-card-panda"
+                />
+              )}
+              <div>
+                <h3 className="stat-card-value">{card.value}</h3>
+                <p className="stat-card-sub">{card.sub}</p>
               </div>
             </div>
-            {idx === 1 && (
-              <img
-                src="/images/media_card.png"
-                alt="Peeking panda"
-                className="dashboard-card-panda"
-              />
-            )}
-            <div>
-              <h3 className="stat-card-value">{card.value}</h3>
-              <p className="stat-card-sub">{card.sub}</p>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Charts Grid */}
