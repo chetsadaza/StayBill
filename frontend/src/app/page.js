@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { formatTHB } from '@/lib/utils';
-import { 
-  MdMeetingRoom, 
-  MdPeople, 
-  MdAttachMoney, 
-  MdPayment, 
+import {
+  MdMeetingRoom,
+  MdPeople,
+  MdAttachMoney,
+  MdPayment,
   MdWarning,
   MdCheckCircle
 } from 'react-icons/md';
@@ -85,40 +85,40 @@ export default function Dashboard() {
   }
 
   const statCards = [
-    { 
-      title: 'ห้องพักทั้งหมด', 
-      value: summary?.totalRooms || 0, 
-      sub: `ว่าง ${summary?.availableRooms || 0} | ไม่ว่าง ${summary?.occupiedRooms || 0}`, 
-      icon: <MdMeetingRoom size={28} />, 
-      color: '#6366f1' 
+    {
+      title: 'ห้องพักทั้งหมด',
+      value: summary?.totalRooms || 0,
+      sub: `ว่าง ${summary?.availableRooms || 0} | ไม่ว่าง ${summary?.occupiedRooms || 0}`,
+      icon: <MdMeetingRoom size={28} />,
+      color: '#6366f1'
     },
-    { 
-      title: 'ผู้เช่าทั้งหมด', 
-      value: summary?.activeTenants || 0, 
-      sub: 'สัญญาเช่าปัจจุบัน', 
-      icon: <MdPeople size={28} />, 
-      color: '#8b5cf6' 
+    {
+      title: 'ผู้เช่าทั้งหมด',
+      value: summary?.activeTenants || 0,
+      sub: 'สัญญาเช่าปัจจุบัน',
+      icon: <MdPeople size={28} />,
+      color: '#8b5cf6'
     },
-    { 
-      title: 'รายรับเดือนนี้ (จ่ายแล้ว)', 
-      value: formatTHB(summary?.monthlyRevenue), 
-      sub: `ข้อมูลประจำเดือน ${summary?.currentMonth}`, 
-      icon: <MdAttachMoney size={28} />, 
-      color: '#10b981' 
+    {
+      title: 'รายรับเดือนนี้ (จ่ายแล้ว)',
+      value: formatTHB(summary?.monthlyRevenue),
+      sub: `ข้อมูลประจำเดือน ${summary?.currentMonth}`,
+      icon: <MdAttachMoney size={28} />,
+      color: '#10b981'
     },
-    { 
-      title: 'ค้างชำระเดือนนี้', 
-      value: formatTHB(summary?.pendingAmount), 
-      sub: 'รอผู้เช่าชำระเงิน', 
-      icon: <MdPayment size={28} />, 
-      color: '#f59e0b' 
+    {
+      title: 'ค้างชำระเดือนนี้',
+      value: formatTHB(summary?.pendingAmount),
+      sub: 'รอผู้เช่าชำระเงิน',
+      icon: <MdPayment size={28} />,
+      color: '#f59e0b'
     }
   ];
 
   // Group chart data
   const barChartData = {
     labels: [
-      'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 
+      'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
       'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
     ],
     datasets: [
@@ -201,10 +201,10 @@ export default function Dashboard() {
           <div key={idx} className="glass-card stat-card" style={{ position: 'relative' }}>
             <div className="stat-card-header">
               <span className="stat-card-title">{card.title}</span>
-              <div 
+              <div
                 className="stat-card-icon-wrap"
-                style={{ 
-                  color: card.color, 
+                style={{
+                  color: card.color,
                   background: `rgba(${card.color === '#6366f1' ? '99,102,241' : card.color === '#8b5cf6' ? '139,92,246' : card.color === '#10b981' ? '16,185,129' : '245,158,11'}, 0.15)`
                 }}
               >
@@ -212,9 +212,9 @@ export default function Dashboard() {
               </div>
             </div>
             {idx === 1 && (
-              <img 
-                src="/images/media_card.png" 
-                alt="Peeking panda" 
+              <img
+                src="/images/media_card.png"
+                alt="Peeking panda"
                 className="dashboard-card-panda"
               />
             )}
@@ -293,7 +293,7 @@ export default function Dashboard() {
               ) : (
                 <tr>
                   <td colSpan="6" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
-                    🎉 ไม่มีบิลค้างชำระในระบบขณะนี้
+                    ไม่มีบิลค้างชำระในระบบขณะนี้
                   </td>
                 </tr>
               )}
@@ -333,7 +333,7 @@ export default function Dashboard() {
             ))
           ) : (
             <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
-              🎉 ไม่มีบิลค้างชำระในระบบขณะนี้
+              ไม่มีบิลค้างชำระในระบบขณะนี้
             </div>
           )}
         </div>
