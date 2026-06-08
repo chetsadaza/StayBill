@@ -7,6 +7,7 @@ import { WATER_TYPES, ELECTRICITY_TYPES, ROOM_TYPES, ROOM_STATUS } from '@/lib/c
 import { MdAdd, MdEdit, MdDelete, MdClose, MdInfo } from 'react-icons/md';
 import Toast from '@/components/ui/Toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState([]);
@@ -339,19 +340,29 @@ export default function RoomsPage() {
 
                 <div className="form-group">
                   <label className="form-label">สถานะห้องพัก</label>
-                  <select 
-                    className="form-input" 
-                    name="status" 
+                  <CustomSelect
+                    name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    disabled={editingRoom?.status === 'occupied'} // can't manually set to vacant when occupied, must checkout tenant
-                  >
-                    <option value="available">ว่าง</option>
-                    <option value="maintenance">ซ่อมบำรุง</option>
-                    {editingRoom?.status === 'occupied' && (
-                      <option value="occupied">มีผู้เช่า (จัดการผ่านเมนูผู้เช่า)</option>
-                    )}
-                  </select>
+                    options={[
+                      { 
+                        value: 'available', 
+                        label: 'ว่าง', 
+                        icon: <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} /> 
+                      },
+                      { 
+                        value: 'maintenance', 
+                        label: 'ซ่อมบำรุง', 
+                        icon: <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} /> 
+                      },
+                      ...(editingRoom?.status === 'occupied' ? [{ 
+                        value: 'occupied', 
+                        label: 'มีผู้เช่า (จัดการผ่านเมนูผู้เช่า)', 
+                        icon: <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366f1', display: 'inline-block' }} /> 
+                      }] : [])
+                    ]}
+                    disabled={editingRoom?.status === 'occupied'}
+                  />
                   {editingRoom?.status === 'occupied' && (
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>* ห้องนี้กำลังมีผู้เช่าอยู่ ไม่สามารถเปลี่ยนสถานะตรงๆ ได้</span>
                   )}

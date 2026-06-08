@@ -274,6 +274,26 @@ h1, h2, h3, h4, h5, h6 {
   transition: var(--transition-fast);
 }
 
+/* Custom styling for select fields to remove native ugly arrows and style dropdowns */
+select.form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239ca3af%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+  padding-right: 40px !important;
+  cursor: pointer;
+}
+
+select.form-input option {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 12px;
+  font-family: var(--font-body);
+}
+
 .form-input:focus {
   outline: none;
   border-color: var(--accent-primary);
@@ -592,9 +612,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @media (max-width: 576px) {
-  .form-grid-2 {
-    grid-template-columns: 1fr;
-    gap: 12px;
+  .modal-content {
+    border-radius: 12px;
+  }
+  .modal-header {
+    padding: 16px 20px;
+  }
+  .modal-body {
+    padding: 16px 20px;
+  }
+  .modal-footer {
+    padding: 12px 20px;
   }
   .filter-bar {
     flex-direction: column;
@@ -611,6 +639,13 @@ h1, h2, h3, h4, h5, h6 {
     text-align: center;
     font-size: 0.8rem;
     padding: 6px 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
 
