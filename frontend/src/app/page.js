@@ -190,9 +190,16 @@ export default function Dashboard() {
   return (
     <>
       {/* Title */}
-      <div>
-        <h2 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>ภาพรวมระบบจัดการหอพัก</h2>
-        <p style={{ color: 'var(--text-secondary)' }}>สรุปข้อมูล สถิติ และบิลค่าเช่าล่าสุด</p>
+      <div className="dashboard-header-container" style={{ position: 'relative' }}>
+        <div>
+          <h2 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>ภาพรวมระบบจัดการหอพัก</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>สรุปข้อมูล สถิติ และบิลค่าเช่าล่าสุด</p>
+        </div>
+        <img 
+          src="/images/1.png" 
+          alt="Panda mascot holding house" 
+          className="dashboard-header-mascot"
+        />
       </div>
 
       {/* Grid Stats */}

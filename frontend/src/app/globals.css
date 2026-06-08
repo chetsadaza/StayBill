@@ -1049,3 +1049,49 @@ h1, h2, h3, h4, h5, h6 {
     opacity: 1;
   }
 }
+
+/* Dashboard header mascot (Panda with house) */
+.dashboard-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.dashboard-header-mascot {
+  position: absolute;
+  right: -40px; /* Offset the 40px desktop padding of main-content to stay flush against screen */
+  top: 50%;
+  transform: translateY(-50%);
+  height: 240px; /* Increased size as requested */
+  width: auto;
+  pointer-events: none;
+  z-index: 5;
+  animation: pandaPeekHeader 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes pandaPeekHeader {
+  0% {
+    transform: translateY(-50%) translateX(60px) scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-50%) translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header-mascot {
+    height: 180px; /* Larger on tablet */
+    right: -16px; /* Offset the 16px tablet padding of main-content */
+  }
+}
+
+@media (max-width: 576px) {
+  .dashboard-header-mascot {
+    height: 150px; /* Larger on mobile */
+    right: -16px; /* Offset the 16px mobile padding of main-content */
+  }
+}
