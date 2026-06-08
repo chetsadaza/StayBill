@@ -26,7 +26,7 @@ export default function ConfirmModal({ message, onConfirm, onCancel, confirmText
           background: 'rgba(99, 102, 241, 0.15)', 
           display: 'flex', 
           alignItems: 'center', 
-          justify: 'center',
+          justifyContent: 'center',
           color: 'var(--accent-primary)',
           marginBottom: '4px'
         }}>
