@@ -176,6 +176,13 @@ export default function RoomsPage() {
             </button>
           ))}
         </div>
+        {statusFilter === '' && (
+          <img 
+            src="/images/3.png" 
+            alt="Cheering panda" 
+            className="filter-bar-panda" 
+          />
+        )}
       </div>
 
       {/* Rooms display */}
