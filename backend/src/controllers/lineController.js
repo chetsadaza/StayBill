@@ -396,8 +396,10 @@ exports.sendBillImageNotification = async (req, res, next) => {
     const filePath = path.join(uploadDir, filename);
     fs.writeFileSync(filePath, base64Data, 'base64');
 
-    // Create public URL
-    const imageUrl = `${APP_BASE_URL}/uploads/bills/${filename}`;
+    // Create public URL pointing to the backend where the image is actually hosted
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const backendUrl = `${protocol}://${req.get('host')}`;
+    const imageUrl = `${backendUrl}/uploads/bills/${filename}`;
 
     // Send Image Message
     const imageMessage = {
