@@ -13,7 +13,9 @@ import {
   MdEdit, 
   MdClose,
   MdAutoAwesome,
-  MdAttachMoney
+  MdAttachMoney,
+  MdExpandMore,
+  MdExpandLess
 } from 'react-icons/md';
 
 import jsPDF from 'jspdf';
@@ -44,6 +46,14 @@ export default function BillingPage() {
   const [isGenModalOpen, setIsGenModalOpen] = useState(false);
   const [meterForm, setMeterForm] = useState([]); // Array of { roomId, roomNumber, waterPreviousMeter, waterCurrentMeter, electricityPreviousMeter, electricityCurrentMeter, additionalCharges: [] }
   const [settings, setSettings] = useState(null);
+  const [expandedRooms, setExpandedRooms] = useState({});
+
+  const toggleExpandRoom = (roomId) => {
+    setExpandedRooms(prev => ({
+      ...prev,
+      [roomId]: !prev[roomId]
+    }));
+  };
 
   // Modal for viewing/printing a single bill
   const [activeBill, setActiveBill] = useState(null);
@@ -125,6 +135,13 @@ export default function BillingPage() {
             selected: !needsMeter // default to true if flat/free (no meters to fill), false if needs meter reading
           });
         }
+
+        // Expand the first room by default, others collapsed
+        const initialExpanded = {};
+        if (occupiedRooms.length > 0) {
+          initialExpanded[occupiedRooms[0]._id] = true;
+        }
+        setExpandedRooms(initialExpanded);
 
         setRooms(occupiedRooms);
         setMeterForm(initialMeterForm);
@@ -537,263 +554,325 @@ export default function BillingPage() {
             </div>
 
             <form onSubmit={handleGenerateSubmit}>
-              <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>กรุณากรอกเลขมิเตอร์น้ำและไฟเดือนปัจจุบันสำหรับห้องที่คิดค่าบริการตามหน่วยใช้งาน:</p>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0, flex: 1 }}>
+                    กรุณากรอกเลขมิเตอร์น้ำและไฟเดือนปัจจุบันสำหรับห้องที่คิดค่าบริการตามหน่วยใช้งาน:
+                  </p>
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary" 
+                    style={{ padding: '6px 12px', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                    onClick={() => {
+                      const allExpanded = meterForm.every(item => expandedRooms[item.roomId]);
+                      const newExpanded = {};
+                      meterForm.forEach(item => {
+                        newExpanded[item.roomId] = !allExpanded;
+                      });
+                      setExpandedRooms(newExpanded);
+                    }}
+                  >
+                    {meterForm.every(item => expandedRooms[item.roomId]) ? 'หดทั้งหมด' : 'ขยายทั้งหมด'}
+                  </button>
+                </div>
                 
                 {meterForm.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>ไม่มีห้องที่มีสัญญาผู้เช่าเช่าอยู่เพื่อทำรายการคำนวณบิล</div>
                 ) : (
-                  meterForm.map((item, idx) => (
-                    <div 
-                      key={item.roomId} 
-                      style={{ 
-                        border: '1px solid var(--border-color)', 
-                        borderRadius: '16px', 
-                        padding: '20px',
-                        background: 'rgba(255, 255, 255, 0.02)',
-                        boxShadow: 'var(--shadow-sm)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '16px',
-                        transition: 'var(--transition-smooth)'
-                      }}
-                    >
-                      {/* Room Header Banner */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <input 
-                            type="checkbox" 
-                            checked={item.selected || false}
-                            onChange={() => handleToggleSelect(idx)}
-                            style={{ 
-                              width: '18px', 
-                              height: '18px', 
-                              cursor: 'pointer',
-                              accentColor: 'var(--accent-primary)'
-                            }}
-                          />
-                          <h4 style={{ color: 'var(--accent-primary)', fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>ห้อง {item.roomNumber}</h4>
-                        </div>
-                        {item.selected ? (
-                          <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--color-success)', fontWeight: 600 }}>
-                            เลือกคำนวณบิล
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-muted)', fontWeight: 600 }}>
-                            ข้ามการสร้างบิล
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
-                        gap: '16px' 
-                      }}>
-                        {/* Water Meter */}
-                        {item.waterType === 'unit' ? (
-                          <div style={{ 
-                            background: 'rgba(255, 255, 255, 0.02)', 
-                            padding: '14px', 
-                            borderRadius: '12px',
-                            border: '1px solid rgba(255, 255, 255, 0.04)'
-                          }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', color: 'var(--color-info)' }}>
-                              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-info)' }}></span>
-                              เลขมิเตอร์น้ำ (หน่วย)
-                            </span>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                              <div>
-                                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>ครั้งก่อน</label>
-                                <input 
-                                  type="number" 
-                                  className="form-input" 
-                                  value={item.waterPreviousMeter}
-                                  onChange={(e) => handleMeterChange(idx, 'waterPreviousMeter', e.target.value)}
-                                  min="0"
-                                  style={{ padding: '8px 12px', fontSize: '0.9rem' }}
-                                />
-                              </div>
-                              <div>
-                                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>ปัจจุบัน</label>
-                                <input 
-                                  type="number" 
-                                  className="form-input" 
-                                  value={item.waterCurrentMeter}
-                                  onChange={(e) => handleMeterChange(idx, 'waterCurrentMeter', e.target.value)}
-                                  min="0"
-                                  style={{ padding: '8px 12px', fontSize: '0.9rem' }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ 
-                            background: 'rgba(255, 255, 255, 0.01)', 
-                            padding: '14px', 
-                            borderRadius: '12px',
-                            border: '1px dashed var(--border-color)',
+                  meterForm.map((item, idx) => {
+                    const isExpanded = !!expandedRooms[item.roomId];
+                    return (
+                      <div 
+                        key={item.roomId} 
+                        style={{ 
+                          border: '1px solid var(--border-color)', 
+                          borderRadius: '16px', 
+                          padding: '16px',
+                          background: 'rgba(255, 255, 255, 0.02)',
+                          boxShadow: 'var(--shadow-sm)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: isExpanded ? '16px' : '0px',
+                          transition: 'var(--transition-smooth)'
+                        }}
+                      >
+                        {/* Room Header Banner - Always Visible */}
+                        <div 
+                          style={{ 
                             display: 'flex', 
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: '100%'
-                          }}>
-                            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                              ค่าน้ำ: <strong style={{ color: 'var(--text-primary)' }}>{WATER_TYPES[item.waterType] || item.waterType}</strong>
-                            </span>
+                            justifyContent: 'space-between', 
+                            alignItems: 'center', 
+                            cursor: 'pointer',
+                            paddingBottom: isExpanded ? '12px' : '0px',
+                            borderBottom: isExpanded ? '1px solid var(--border-color)' : 'none'
+                          }}
+                          onClick={() => toggleExpandRoom(item.roomId)}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} onClick={(e) => e.stopPropagation()}>
+                            <input 
+                              type="checkbox" 
+                              checked={item.selected || false}
+                              onChange={() => handleToggleSelect(idx)}
+                              style={{ 
+                                width: '18px', 
+                                height: '18px', 
+                                cursor: 'pointer',
+                                accentColor: 'var(--accent-primary)'
+                              }}
+                            />
+                            <h4 style={{ color: 'var(--accent-primary)', fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>ห้อง {item.roomNumber}</h4>
                           </div>
-                        )}
 
-                        {/* Electricity Meter */}
-                        {item.electricityType === 'unit' ? (
-                          <div style={{ 
-                            background: 'rgba(255, 255, 255, 0.02)', 
-                            padding: '14px', 
-                            borderRadius: '12px',
-                            border: '1px solid rgba(255, 255, 255, 0.04)'
-                          }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', color: 'var(--color-warning)' }}>
-                              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-warning)' }}></span>
-                              เลขมิเตอร์ไฟ (หน่วย)
-                            </span>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                              <div>
-                                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>ครั้งก่อน</label>
-                                <input 
-                                  type="number" 
-                                  className="form-input" 
-                                  value={item.electricityPreviousMeter}
-                                  onChange={(e) => handleMeterChange(idx, 'electricityPreviousMeter', e.target.value)}
-                                  min="0"
-                                  style={{ padding: '8px 12px', fontSize: '0.9rem' }}
-                                />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {/* Short summary when collapsed */}
+                            {!isExpanded && (
+                              <div style={{ display: 'flex', gap: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+                                {item.waterType === 'unit' && item.waterCurrentMeter > item.waterPreviousMeter && (
+                                  <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--color-info)', padding: '2px 6px', borderRadius: '4px' }}>
+                                    น้ำ: {item.waterCurrentMeter - item.waterPreviousMeter} หน่วย
+                                  </span>
+                                )}
+                                {item.electricityType === 'unit' && item.electricityCurrentMeter > item.electricityPreviousMeter && (
+                                  <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--color-warning)', padding: '2px 6px', borderRadius: '4px' }}>
+                                    ไฟ: {item.electricityCurrentMeter - item.electricityPreviousMeter} หน่วย
+                                  </span>
+                                )}
+                                {item.discount > 0 && (
+                                  <span style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)', padding: '2px 6px', borderRadius: '4px' }}>
+                                    ลด ฿{item.discount}
+                                  </span>
+                                )}
                               </div>
-                              <div>
-                                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>ปัจจุบัน</label>
-                                <input 
-                                  type="number" 
-                                  className="form-input" 
-                                  value={item.electricityCurrentMeter}
-                                  onChange={(e) => handleMeterChange(idx, 'electricityCurrentMeter', e.target.value)}
-                                  min="0"
-                                  style={{ padding: '8px 12px', fontSize: '0.9rem' }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ 
-                            background: 'rgba(255, 255, 255, 0.01)', 
-                            padding: '14px', 
-                            borderRadius: '12px',
-                            border: '1px dashed var(--border-color)',
-                            display: 'flex', 
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: '100%'
-                          }}>
-                            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                              ค่าไฟ: <strong style={{ color: 'var(--text-primary)' }}>{ELECTRICITY_TYPES[item.electricityType] || item.electricityType}</strong>
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                            )}
 
-                      {/* Additional Charges per room */}
-                      <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>ค่าใช้จ่ายเพิ่มเติม (เช่น อินเทอร์เน็ต, ที่จอดรถ, ค่าปรับ)</span>
-                          <button 
-                            type="button" 
-                            className="btn btn-secondary" 
-                            style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', height: '32px' }}
-                            onClick={() => handleAddCharge(idx)}
-                          >
-                            + เพิ่มรายการ
-                          </button>
+                            {item.selected ? (
+                              <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--color-success)', fontWeight: 600 }}>
+                                เลือกบิล
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                ข้าม
+                              </span>
+                            )}
+
+                            {isExpanded ? <MdExpandLess size={24} style={{ color: 'var(--text-secondary)' }} /> : <MdExpandMore size={24} style={{ color: 'var(--text-secondary)' }} />}
+                          </div>
                         </div>
 
-                        {item.additionalCharges.length === 0 ? (
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '8px', border: '1px dashed var(--border-color)', borderRadius: '8px', background: 'rgba(255,255,255,0.005)' }}>
-                            ไม่มีค่าใช้จ่ายเพิ่มเติม
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {item.additionalCharges.map((charge, cIdx) => (
-                              <div key={cIdx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {/* Collapsible content */}
+                        {isExpanded && (
+                          <div style={{ animation: 'pageFadeIn 0.2s ease-out', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ 
+                              display: 'grid', 
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
+                              gap: '16px' 
+                            }}>
+                              {/* Water Meter */}
+                              {item.waterType === 'unit' ? (
+                                <div style={{ 
+                                  background: 'rgba(255, 255, 255, 0.02)', 
+                                  padding: '14px', 
+                                  borderRadius: '12px',
+                                  border: '1px solid rgba(255, 255, 255, 0.04)'
+                                }}>
+                                  <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', color: 'var(--color-info)' }}>
+                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-info)' }}></span>
+                                    เลขมิเตอร์น้ำ (หน่วย)
+                                  </span>
+                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    <div>
+                                      <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>ครั้งก่อน</label>
+                                      <input 
+                                        type="number" 
+                                        className="form-input" 
+                                        value={item.waterPreviousMeter}
+                                        onChange={(e) => handleMeterChange(idx, 'waterPreviousMeter', e.target.value)}
+                                        min="0"
+                                        style={{ padding: '8px 12px', fontSize: '0.9rem' }}
+                                      />
+                                    </div>
+                                    <div>
+                                      <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>ปัจจุบัน</label>
+                                      <input 
+                                        type="number" 
+                                        className="form-input" 
+                                        value={item.waterCurrentMeter}
+                                        onChange={(e) => handleMeterChange(idx, 'waterCurrentMeter', e.target.value)}
+                                        min="0"
+                                        style={{ padding: '8px 12px', fontSize: '0.9rem' }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div style={{ 
+                                  background: 'rgba(255, 255, 255, 0.01)', 
+                                  padding: '14px', 
+                                  borderRadius: '12px',
+                                  border: '1px dashed var(--border-color)',
+                                  display: 'flex', 
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  height: '100%'
+                                }}>
+                                  <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                                    ค่าน้ำ: <strong style={{ color: 'var(--text-primary)' }}>{WATER_TYPES[item.waterType] || item.waterType}</strong>
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Electricity Meter */}
+                              {item.electricityType === 'unit' ? (
+                                <div style={{ 
+                                  background: 'rgba(255, 255, 255, 0.02)', 
+                                  padding: '14px', 
+                                  borderRadius: '12px',
+                                  border: '1px solid rgba(255, 255, 255, 0.04)'
+                                }}>
+                                  <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', color: 'var(--color-warning)' }}>
+                                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-warning)' }}></span>
+                                    เลขมิเตอร์ไฟ (หน่วย)
+                                  </span>
+                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    <div>
+                                      <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>ครั้งก่อน</label>
+                                      <input 
+                                        type="number" 
+                                        className="form-input" 
+                                        value={item.electricityPreviousMeter}
+                                        onChange={(e) => handleMeterChange(idx, 'electricityPreviousMeter', e.target.value)}
+                                        min="0"
+                                        style={{ padding: '8px 12px', fontSize: '0.9rem' }}
+                                      />
+                                    </div>
+                                    <div>
+                                      <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>ปัจจุบัน</label>
+                                      <input 
+                                        type="number" 
+                                        className="form-input" 
+                                        value={item.electricityCurrentMeter}
+                                        onChange={(e) => handleMeterChange(idx, 'electricityCurrentMeter', e.target.value)}
+                                        min="0"
+                                        style={{ padding: '8px 12px', fontSize: '0.9rem' }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div style={{ 
+                                  background: 'rgba(255, 255, 255, 0.01)', 
+                                  padding: '14px', 
+                                  borderRadius: '12px',
+                                  border: '1px dashed var(--border-color)',
+                                  display: 'flex', 
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  height: '100%'
+                                }}>
+                                  <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                                    ค่าไฟ: <strong style={{ color: 'var(--text-primary)' }}>{ELECTRICITY_TYPES[item.electricityType] || item.electricityType}</strong>
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Additional Charges per room */}
+                            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>ค่าใช้จ่ายเพิ่มเติม (เช่น อินเทอร์เน็ต, ที่จอดรถ, ค่าปรับ)</span>
+                                <button 
+                                  type="button" 
+                                  className="btn btn-secondary" 
+                                  style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', height: '32px' }}
+                                  onClick={() => handleAddCharge(idx)}
+                                >
+                                  + เพิ่มรายการ
+                                </button>
+                              </div>
+
+                              {item.additionalCharges.length === 0 ? (
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '8px', border: '1px dashed var(--border-color)', borderRadius: '8px', background: 'rgba(255,255,255,0.005)' }}>
+                                  ไม่มีค่าใช้จ่ายเพิ่มเติม
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                  {item.additionalCharges.map((charge, cIdx) => (
+                                    <div key={cIdx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                      <input 
+                                        type="text" 
+                                        className="form-input" 
+                                        style={{ flex: 2, padding: '8px 12px', fontSize: '0.85rem' }}
+                                        value={charge.description}
+                                        onChange={(e) => handleChargeChange(idx, cIdx, 'description', e.target.value)}
+                                        placeholder="รายการบริการ"
+                                      />
+                                      <input 
+                                        type="number" 
+                                        className="form-input" 
+                                        style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem' }}
+                                        value={charge.amount}
+                                        onChange={(e) => handleChargeChange(idx, cIdx, 'amount', e.target.value)}
+                                        placeholder="จำนวนเงิน"
+                                        min="0"
+                                      />
+                                      <button 
+                                        type="button" 
+                                        className="btn btn-danger" 
+                                        style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '36px', width: '36px' }}
+                                        onClick={() => handleRemoveCharge(idx, cIdx)}
+                                      >
+                                        <MdDelete size={16} />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Discount & Remarks */}
+                            <div style={{ 
+                              borderTop: '1px solid var(--border-color)', 
+                              paddingTop: '16px', 
+                              display: 'grid', 
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                              gap: '16px' 
+                            }}>
+                              <div>
+                                <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px', color: 'var(--color-danger)' }}>
+                                  ส่วนลด (บาท)
+                                </label>
+                                <div style={{ position: 'relative' }}>
+                                  <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>฿</span>
+                                  <input 
+                                    type="number" 
+                                    className="form-input" 
+                                    placeholder="0"
+                                    value={item.discount || ''}
+                                    onChange={(e) => handleMeterChange(idx, 'discount', e.target.value)}
+                                    min="0"
+                                    style={{ paddingLeft: '28px', paddingRight: '12px', height: '38px', fontSize: '0.9rem' }}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                                  หมายเหตุประจำห้อง / บันทึกเพิ่มเติม
+                                </label>
                                 <input 
                                   type="text" 
                                   className="form-input" 
-                                  style={{ flex: 2, padding: '8px 12px', fontSize: '0.85rem' }}
-                                  value={charge.description}
-                                  onChange={(e) => handleChargeChange(idx, cIdx, 'description', e.target.value)}
-                                  placeholder="รายการบริการ"
+                                  placeholder="เช่น คืนค่าประกัน, หักค่าซ่อมอุปกรณ์"
+                                  value={item.remarks || ''}
+                                  onChange={(e) => handleMeterChange(idx, 'remarks', e.target.value)}
+                                  style={{ height: '38px', fontSize: '0.9rem' }}
                                 />
-                                <input 
-                                  type="number" 
-                                  className="form-input" 
-                                  style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem' }}
-                                  value={charge.amount}
-                                  onChange={(e) => handleChargeChange(idx, cIdx, 'amount', e.target.value)}
-                                  placeholder="จำนวนเงิน"
-                                  min="0"
-                                />
-                                <button 
-                                  type="button" 
-                                  className="btn btn-danger" 
-                                  style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '36px', width: '36px' }}
-                                  onClick={() => handleRemoveCharge(idx, cIdx)}
-                                >
-                                  <MdDelete size={16} />
-                                </button>
                               </div>
-                            ))}
+                            </div>
                           </div>
                         )}
                       </div>
-
-                      {/* Discount & Remarks */}
-                      <div style={{ 
-                        borderTop: '1px solid var(--border-color)', 
-                        paddingTop: '16px', 
-                        display: 'grid', 
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                        gap: '16px' 
-                      }}>
-                        <div>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px', color: 'var(--color-danger)' }}>
-                            ส่วนลด (บาท)
-                          </label>
-                          <div style={{ position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>฿</span>
-                            <input 
-                              type="number" 
-                              className="form-input" 
-                              placeholder="0"
-                              value={item.discount || ''}
-                              onChange={(e) => handleMeterChange(idx, 'discount', e.target.value)}
-                              min="0"
-                              style={{ paddingLeft: '28px', paddingRight: '12px', height: '38px', fontSize: '0.9rem' }}
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>
-                            หมายเหตุประจำห้อง / บันทึกเพิ่มเติม
-                          </label>
-                          <input 
-                            type="text" 
-                            className="form-input" 
-                            placeholder="เช่น คืนค่าประกัน, หักค่าซ่อมอุปกรณ์"
-                            value={item.remarks || ''}
-                            onChange={(e) => handleMeterChange(idx, 'remarks', e.target.value)}
-                            style={{ height: '38px', fontSize: '0.9rem' }}
-                          />
-                        </div>
-                      </div>
-
-                    </div>
-                  ))
+                    );
+                  })
                 )}
 
               </div>
