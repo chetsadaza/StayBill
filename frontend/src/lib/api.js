@@ -83,4 +83,8 @@ export const api = {
   // Settings
   getSettings: () => request('/settings'),
   updateSettings: (data) => request('/settings', { method: 'PUT', body: data }),
+
+  // LINE Integration
+  generateLineToken: (tenantId) => request(`/line/generate-token/${tenantId}`, { method: 'POST' }),
+  sendBillToLine: (billId) => request(`/line/send-bill/${billId}`, { method: 'POST' }),
 };

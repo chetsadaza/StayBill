@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
-import { MdAdd, MdEdit, MdDelete, MdClose, MdExitToApp, MdPhone, MdAssignmentInd } from 'react-icons/md';
+import { MdAdd, MdEdit, MdDelete, MdClose, MdExitToApp, MdPhone, MdAssignmentInd, MdSend, MdLink, MdLinkOff, MdContentCopy } from 'react-icons/md';
 import Toast from '@/components/ui/Toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
@@ -28,6 +28,9 @@ export default function TenantsPage() {
 
   // Filter state
   const [activeFilter, setActiveFilter] = useState('true'); // 'true' = active, 'false' = historic, '' = all
+
+  // LINE connection modal
+  const [lineModal, setLineModal] = useState({ show: false, token: null, expiresAt: null, tenantName: '', loading: false });
 
   // Custom alert states
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -137,6 +140,27 @@ export default function TenantsPage() {
         }
       }
     );
+  };
+
+  // LINE connection
+  const handleConnectLine = async (tenantId, tenantName) => {
+    try {
+      setLineModal({ show: true, token: null, expiresAt: null, tenantName, loading: true });
+      const res = await api.generateLineToken(tenantId);
+      if (res.success) {
+        setLineModal(prev => ({ ...prev, token: res.data.token, expiresAt: res.data.expiresAt, loading: false }));
+      }
+    } catch (err) {
+      showToast(err.message || 'ไม่สามารถสร้างรหัสเชื่อมต่อ LINE ได้', 'error');
+      setLineModal({ show: false, token: null, expiresAt: null, tenantName: '', loading: false });
+    }
+  };
+
+  const copyToken = () => {
+    if (lineModal.token) {
+      navigator.clipboard.writeText(lineModal.token);
+      showToast('คัดลอกรหัสแล้ว', 'success');
+    }
   };
 
   const handleInputChange = (e) => {
@@ -262,11 +286,25 @@ export default function TenantsPage() {
                         </td>
                         <td>{formatDate(tenant.moveInDate)}</td>
                         <td>
-                          {tenant.isActive ? (
-                            <span className="badge badge-success">ปกติ (กำลังเช่า)</span>
-                          ) : (
-                            <span className="badge badge-danger">ย้ายออกแล้ว</span>
-                          )}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {tenant.isActive ? (
+                              <span className="badge badge-success">ปกติ (กำลังเช่า)</span>
+                            ) : (
+                              <span className="badge badge-danger">ย้ายออกแล้ว</span>
+                            )}
+                            {tenant.lineUserId ? (
+                              <span style={{ fontSize: '0.7rem', color: '#06c755', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                <MdLink size={12} /> LINE เชื่อมแล้ว
+                              </span>
+                            ) : tenant.isActive ? (
+                              <button
+                                style={{ fontSize: '0.7rem', color: '#06c755', background: 'rgba(6,199,85,0.1)', border: '1px solid rgba(6,199,85,0.2)', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}
+                                onClick={() => handleConnectLine(tenant._id, `${tenant.firstName} ${tenant.lastName}`)}
+                              >
+                                <MdLinkOff size={12} /> เชื่อมต่อ LINE
+                              </button>
+                            ) : null}
+                          </div>
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: '8px' }}>
@@ -362,6 +400,25 @@ export default function TenantsPage() {
                     <div className="mobile-card-row">
                       <span className="mobile-card-label">วันที่ย้ายเข้า:</span>
                       <span className="mobile-card-value">{formatDate(tenant.moveInDate)}</span>
+                    </div>
+                    <div className="mobile-card-row">
+                      <span className="mobile-card-label">LINE:</span>
+                      <span className="mobile-card-value">
+                        {tenant.lineUserId ? (
+                          <span style={{ color: '#06c755', display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.85rem' }}>
+                            <MdLink size={14} /> เชื่อมแล้ว
+                          </span>
+                        ) : tenant.isActive ? (
+                          <button
+                            style={{ fontSize: '0.8rem', color: '#06c755', background: 'rgba(6,199,85,0.1)', border: '1px solid rgba(6,199,85,0.2)', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            onClick={() => handleConnectLine(tenant._id, name)}
+                          >
+                            <MdLinkOff size={14} /> เชื่อมต่อ LINE
+                          </button>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>-</span>
+                        )}
+                      </span>
                     </div>
                   </div>
                   <div className="mobile-card-actions" style={{ position: 'relative', zIndex: 1 }}>
@@ -529,6 +586,67 @@ export default function TenantsPage() {
                 <button type="submit" className="btn btn-primary">บันทึกข้อมูล</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* LINE Token Modal */}
+      {lineModal.show && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '450px' }}>
+            <div className="modal-header">
+              <h3 style={{ fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ color: '#06c755', fontSize: '1.3rem' }}>●</span> เชื่อมต่อ LINE
+              </h3>
+              <button style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }} onClick={() => setLineModal({ show: false, token: null, expiresAt: null, tenantName: '', loading: false })}>
+                <MdClose size={24} />
+              </button>
+            </div>
+            <div className="modal-body" style={{ padding: '24px', textAlign: 'center' }}>
+              {lineModal.loading ? (
+                <div style={{ padding: '30px', color: 'var(--text-secondary)' }}>กำลังสร้างรหัส...</div>
+              ) : (
+                <>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '8px' }}>
+                    รหัสยืนยันสำหรับ <strong style={{ color: 'var(--text-primary)' }}>คุณ{lineModal.tenantName}</strong>
+                  </p>
+                  <div style={{
+                    fontSize: '2.8rem',
+                    fontWeight: 800,
+                    letterSpacing: '12px',
+                    color: '#06c755',
+                    background: 'rgba(6,199,85,0.08)',
+                    border: '2px dashed rgba(6,199,85,0.3)',
+                    borderRadius: '16px',
+                    padding: '20px',
+                    margin: '16px 0',
+                    fontFamily: 'monospace',
+                    userSelect: 'all',
+                  }}>
+                    {lineModal.token}
+                  </div>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ margin: '0 auto 16px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
+                    onClick={copyToken}
+                  >
+                    <MdContentCopy size={16} /> คัดลอกรหัส
+                  </button>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+                    <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>วิธีใช้งาน:</p>
+                    <p>1. บอกผู้เช่าให้แอดเพื่อนกับ LINE Bot ของหอพัก</p>
+                    <p>2. พิมพ์รหัส 6 หลักด้านบนส่งเข้าในแชท</p>
+                    <p>3. ระบบจะเชื่อมต่ออัตโนมัติและส่งบิลได้ทันที</p>
+                  </div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--color-warning)', marginTop: '12px' }}>
+                    ⚠️ รหัสนี้มีอายุ 15 นาที หลังจากสร้าง
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setLineModal({ show: false, token: null, expiresAt: null, tenantName: '', loading: false })}>ปิด</button>
+            </div>
           </div>
         </div>
       )}

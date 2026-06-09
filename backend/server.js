@@ -14,7 +14,11 @@ connectDB();
 const app = express();
 
 // Body parser
-app.use(express.json());
+app.use(express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 
 // Enable CORS
 app.use(cors());
@@ -30,6 +34,7 @@ app.use('/api/tenants', require('./src/routes/tenants'));
 app.use('/api/bills', require('./src/routes/bills'));
 app.use('/api/reports', require('./src/routes/reports'));
 app.use('/api/settings', require('./src/routes/settings'));
+app.use('/api/line', require('./src/routes/line'));
 
 // Root path handler
 app.get('/', (req, res) => {

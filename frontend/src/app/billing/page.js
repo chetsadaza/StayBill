@@ -15,7 +15,8 @@ import {
   MdAutoAwesome,
   MdAttachMoney,
   MdExpandMore,
-  MdExpandLess
+  MdExpandLess,
+  MdSend
 } from 'react-icons/md';
 
 import jsPDF from 'jspdf';
@@ -300,6 +301,19 @@ export default function BillingPage() {
     );
   };
 
+  // Send bill to LINE
+  const handleSendLine = async (billId, roomNumber) => {
+    try {
+      showToast('กำลังส่งบิลไป LINE...', 'info');
+      const res = await api.sendBillToLine(billId);
+      if (res.success) {
+        showToast(res.message || `ส่งบิลห้อง ${roomNumber} ไป LINE เรียบร้อยแล้ว`, 'success');
+      }
+    } catch (err) {
+      showToast(err.message || 'ไม่สามารถส่งบิลไป LINE ได้ ตรวจสอบว่าผู้เช่าเชื่อมต่อ LINE แล้ว', 'error');
+    }
+  };
+
   // Generate PDF Invoice
   const generatePDF = async () => {
     if (!activeBill) return;
@@ -461,6 +475,16 @@ export default function BillingPage() {
                           </button>
                         )}
 
+                        {bill.tenant?.lineUserId && (
+                          <button 
+                            className="btn btn-primary" 
+                            style={{ padding: '6px 12px', fontSize: '0.8rem', background: '#06c755' }}
+                            onClick={() => handleSendLine(bill._id, bill.room?.roomNumber)}
+                          >
+                            <MdSend size={14} /> ส่ง LINE
+                          </button>
+                        )}
+
                         <button 
                           className="btn btn-danger" 
                           style={{ padding: '6px' }}
@@ -525,6 +549,16 @@ export default function BillingPage() {
                       onClick={() => handlePayBill(bill._id, bill.room.roomNumber)}
                     >
                       <MdCheckCircle size={14} /> จ่ายแล้ว
+                    </button>
+                  )}
+
+                  {bill.tenant?.lineUserId && (
+                    <button 
+                      className="btn btn-primary" 
+                      style={{ background: '#06c755', flex: '1' }}
+                      onClick={() => handleSendLine(bill._id, bill.room?.roomNumber)}
+                    >
+                      <MdSend size={14} /> ส่ง LINE
                     </button>
                   )}
 

@@ -34,6 +34,18 @@ const tenantSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  lineUserId: {
+    type: String,
+    default: null
+  },
+  lineRegisterToken: {
+    type: String,
+    default: null
+  },
+  lineRegisterTokenExpires: {
+    type: Date,
+    default: null
+  },
   isActive: {
     type: Boolean,
     default: true

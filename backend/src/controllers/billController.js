@@ -15,7 +15,7 @@ exports.getBills = async (req, res, next) => {
 
     const bills = await Bill.find(filter)
       .populate('room', 'roomNumber floor')
-      .populate('tenant', 'firstName lastName phone')
+      .populate('tenant', 'firstName lastName phone lineUserId')
       .sort({ createdAt: -1 });
 
     res.json({ success: true, count: bills.length, data: bills });
@@ -30,7 +30,7 @@ exports.getBill = async (req, res, next) => {
   try {
     const bill = await Bill.findById(req.params.id)
       .populate('room', 'roomNumber floor type monthlyRent')
-      .populate('tenant', 'firstName lastName phone idCard');
+      .populate('tenant', 'firstName lastName phone idCard lineUserId');
 
     if (!bill) {
       return res.status(404).json({ success: false, message: 'ไม่พบบิล' });
@@ -140,7 +140,7 @@ exports.generateBills = async (req, res, next) => {
 
     const populatedBills = await Bill.find({ _id: { $in: bills.map(b => b._id) } })
       .populate('room', 'roomNumber floor')
-      .populate('tenant', 'firstName lastName');
+      .populate('tenant', 'firstName lastName phone lineUserId');
 
     res.status(201).json({
       success: true,
@@ -201,7 +201,7 @@ exports.updateBill = async (req, res, next) => {
       runValidators: true
     })
       .populate('room', 'roomNumber floor')
-      .populate('tenant', 'firstName lastName phone');
+      .populate('tenant', 'firstName lastName phone lineUserId');
 
     res.json({ success: true, data: updatedBill });
   } catch (error) {
@@ -223,7 +223,7 @@ exports.payBill = async (req, res, next) => {
       { new: true }
     )
       .populate('room', 'roomNumber floor')
-      .populate('tenant', 'firstName lastName');
+      .populate('tenant', 'firstName lastName phone lineUserId');
 
     if (!bill) {
       return res.status(404).json({ success: false, message: 'ไม่พบบิล' });
