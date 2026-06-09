@@ -136,9 +136,13 @@ export default function BillingPage() {
   const handleMeterChange = (index, field, value) => {
     setMeterForm(prev => {
       const updated = [...prev];
+      let parsedValue = value;
+      if (field !== 'remarks') {
+        parsedValue = value === '' ? '' : Number(value);
+      }
       updated[index] = {
         ...updated[index],
-        [field]: field === 'remarks' ? value : Number(value)
+        [field]: parsedValue
       };
       return updated;
     });
@@ -165,7 +169,7 @@ export default function BillingPage() {
       const updated = [...prev];
       updated[roomIndex].additionalCharges[chargeIndex] = {
         ...updated[roomIndex].additionalCharges[chargeIndex],
-        [field]: field === 'amount' ? Number(value) : value
+        [field]: field === 'amount' ? (value === '' ? '' : Number(value)) : value
       };
       return updated;
     });
@@ -174,9 +178,23 @@ export default function BillingPage() {
   const handleGenerateSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Sanitize inputs: convert empty strings to 0 before sending to API
+      const sanitizedMeterReadings = meterForm.map(item => ({
+        ...item,
+        waterPreviousMeter: item.waterPreviousMeter === '' ? 0 : item.waterPreviousMeter,
+        waterCurrentMeter: item.waterCurrentMeter === '' ? 0 : item.waterCurrentMeter,
+        electricityPreviousMeter: item.electricityPreviousMeter === '' ? 0 : item.electricityPreviousMeter,
+        electricityCurrentMeter: item.electricityCurrentMeter === '' ? 0 : item.electricityCurrentMeter,
+        discount: item.discount === '' ? 0 : item.discount,
+        additionalCharges: item.additionalCharges.map(charge => ({
+          ...charge,
+          amount: charge.amount === '' ? 0 : charge.amount
+        }))
+      }));
+
       const res = await api.generateBills({
         billingMonth: selectedMonth,
-        meterReadings: meterForm
+        meterReadings: sanitizedMeterReadings
       });
 
       if (res.success) {
