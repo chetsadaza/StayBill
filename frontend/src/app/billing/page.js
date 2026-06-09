@@ -60,6 +60,10 @@ export default function BillingPage() {
   const [activeBill, setActiveBill] = useState(null);
   const printRef = useRef(null);
 
+  // Hidden state and ref for generating bill images
+  const [hiddenBill, setHiddenBill] = useState(null);
+  const hiddenPrintRef = useRef(null);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -301,16 +305,42 @@ export default function BillingPage() {
     );
   };
 
-  // Send bill to LINE
-  const handleSendLine = async (billId, roomNumber) => {
+  // Send bill image to LINE
+  const handleSendLine = async (bill, roomNumber) => {
     try {
-      showToast('กำลังส่งบิลไป LINE...', 'info');
-      const res = await api.sendBillToLine(billId);
-      if (res.success) {
-        showToast(res.message || `ส่งบิลห้อง ${roomNumber} ไป LINE เรียบร้อยแล้ว`, 'success');
-      }
+      showToast('กำลังเตรียมรูปใบแจ้งหนี้...', 'info');
+      setHiddenBill(bill);
+      
+      // รอให้ React render โครงสร้างของบิลลับก่อนทำการจับภาพ
+      setTimeout(async () => {
+        try {
+          const element = hiddenPrintRef.current;
+          if (!element) {
+            showToast('ไม่สามารถสร้างรูปภาพใบแจ้งหนี้ได้', 'error');
+            setHiddenBill(null);
+            return;
+          }
+
+          element.classList.add('exporting');
+          const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+          element.classList.remove('exporting');
+          
+          const imgData = canvas.toDataURL('image/png');
+          showToast('กำลังส่งรูปใบแจ้งหนี้ไป LINE...', 'info');
+          
+          const res = await api.sendBillImageToLine(bill._id, { imageBase64: imgData });
+          if (res.success) {
+            showToast(res.message || `ส่งรูปใบเสร็จห้อง ${roomNumber} ไป LINE สำเร็จ`, 'success');
+          }
+        } catch (err) {
+          showToast(err.message || 'ไม่สามารถส่งบิลไป LINE ได้', 'error');
+        } finally {
+          setHiddenBill(null);
+        }
+      }, 400);
     } catch (err) {
-      showToast(err.message || 'ไม่สามารถส่งบิลไป LINE ได้ ตรวจสอบว่าผู้เช่าเชื่อมต่อ LINE แล้ว', 'error');
+      showToast(err.message || 'เกิดข้อผิดพลาด', 'error');
+      setHiddenBill(null);
     }
   };
 
@@ -479,7 +509,7 @@ export default function BillingPage() {
                           <button 
                             className="btn btn-primary" 
                             style={{ padding: '6px 12px', fontSize: '0.8rem', background: '#06c755' }}
-                            onClick={() => handleSendLine(bill._id, bill.room?.roomNumber)}
+                            onClick={() => handleSendLine(bill, bill.room?.roomNumber)}
                           >
                             <MdSend size={14} /> ส่ง LINE
                           </button>
@@ -556,7 +586,7 @@ export default function BillingPage() {
                     <button 
                       className="btn btn-primary" 
                       style={{ background: '#06c755', flex: '1' }}
-                      onClick={() => handleSendLine(bill._id, bill.room?.roomNumber)}
+                      onClick={() => handleSendLine(bill, bill.room?.roomNumber)}
                     >
                       <MdSend size={14} /> ส่ง LINE
                     </button>
@@ -1134,6 +1164,174 @@ export default function BillingPage() {
           onCancel={() => setConfirmState(prev => ({ ...prev, show: false }))}
         />
       )}
+      {/* Hidden area for generating images of bills */}
+      {hiddenBill && (
+        <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '750px', background: '#f3f4f6' }}>
+          <div 
+            ref={hiddenPrintRef}
+            className="invoice-paper"
+            style={{ width: '750px', margin: 0, padding: '40px', background: '#ffffff', boxSizing: 'border-box' }}
+          >
+            {/* Header */}
+            <div className="invoice-header">
+              <div>
+                <h2 style={{ fontSize: '1.6rem', fontWeight: 700, color: '#4f46e5', marginBottom: '4px' }}>{settings?.dormitoryName || 'หอพัก StayBill'}</h2>
+                <p style={{ fontSize: '0.85rem', color: '#4b5563', maxWidth: '380px', lineHeight: '1.4' }}>{settings?.address || 'ข้อมูลที่อยู่หอพัก'}</p>
+                <p style={{ fontSize: '0.85rem', color: '#4b5563', marginTop: '4px' }}>โทร: {settings?.phone || '-'}</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#111827', margin: 0 }}>ใบแจ้งหนี้ค่าเช่า</h1>
+                <span style={{ fontSize: '0.8rem', background: '#f3f4f6', padding: '4px 10px', borderRadius: '4px', fontWeight: 600, display: 'inline-block', marginTop: '8px' }}>
+                  ประจำเดือน: {formatBillingMonth(hiddenBill.billingMonth)}
+                </span>
+              </div>
+            </div>
+
+            {/* Tenant & Room details */}
+            <div className="invoice-details-grid">
+              <div className="invoice-card">
+                <h4 className="invoice-card-title">ผู้เช่าห้องพัก</h4>
+                <p className="invoice-card-value">คุณ {hiddenBill.tenant?.firstName} {hiddenBill.tenant?.lastName}</p>
+                <p className="invoice-card-sub">เบอร์โทร: {hiddenBill.tenant?.phone || '-'}</p>
+              </div>
+              <div className="invoice-card">
+                <h4 className="invoice-card-title">ข้อมูลห้องพัก</h4>
+                <p className="invoice-card-value">ห้องพักหมายเลข {hiddenBill.room?.roomNumber}</p>
+                <p className="invoice-card-sub">ชั้น: {hiddenBill.room?.floor} | ประเภทห้อง: Standard</p>
+              </div>
+            </div>
+
+            {/* Table of charges */}
+            <div className="invoice-table-wrapper">
+              <table>
+                <thead>
+                  <tr style={{ background: '#f3f4f6' }}>
+                    <th style={{ padding: '12px', borderBottom: '2px solid #e5e7eb', textAlign: 'left', fontSize: '0.9rem', color: '#374151' }}>รายการค่าบริการ</th>
+                    <th style={{ padding: '12px', borderBottom: '2px solid #e5e7eb', textAlign: 'center', fontSize: '0.9rem', color: '#374151' }}>มิเตอร์เก่า</th>
+                    <th style={{ padding: '12px', borderBottom: '2px solid #e5e7eb', textAlign: 'center', fontSize: '0.9rem', color: '#374151' }}>มิเตอร์ใหม่</th>
+                    <th style={{ padding: '12px', borderBottom: '2px solid #e5e7eb', textAlign: 'center', fontSize: '0.9rem', color: '#374151' }}>จำนวนหน่วย / อัตรา</th>
+                    <th style={{ padding: '12px', borderBottom: '2px solid #e5e7eb', textAlign: 'right', fontSize: '0.9rem', color: '#374151' }}>ยอดสุทธิ (บาท)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Monthly Rent */}
+                  <tr>
+                    <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', fontSize: '0.9rem', fontWeight: 600 }}>ค่าเช่าห้องพักรายเดือน</td>
+                    <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', color: '#9ca3af' }}>-</td>
+                    <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', color: '#9ca3af' }}>-</td>
+                    <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', color: '#4b5563', fontSize: '0.85rem' }}>เหมาจ่าย</td>
+                    <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'right', fontWeight: 600 }}>{formatTHB(hiddenBill.monthlyRent)}</td>
+                  </tr>
+
+                  {/* Water charges */}
+                  {hiddenBill.waterTotal > 0 && (
+                    <tr>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', fontSize: '0.9rem' }}>
+                        ค่าน้ำประปา {hiddenBill.waterType === 'flat' ? '(เหมาจ่าย)' : ''}
+                      </td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', color: '#4b5563' }}>
+                        {hiddenBill.waterType === 'unit' ? hiddenBill.waterPreviousMeter : '-'}
+                      </td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', color: '#4b5563' }}>
+                        {hiddenBill.waterType === 'unit' ? hiddenBill.waterCurrentMeter : '-'}
+                      </td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', color: '#4b5563', fontSize: '0.85rem' }}>
+                        {hiddenBill.waterType === 'unit' ? `${hiddenBill.waterUnits} หน่วย @ ${hiddenBill.waterRate} บ.` : 'เหมาจ่าย'}
+                      </td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{formatTHB(hiddenBill.waterTotal)}</td>
+                    </tr>
+                  )}
+
+                  {/* Electricity charges */}
+                  {hiddenBill.electricityTotal > 0 && (
+                    <tr>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', fontSize: '0.9rem' }}>
+                        ค่าไฟฟ้า {hiddenBill.electricityType === 'flat' ? '(เหมาจ่าย)' : ''}
+                      </td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', color: '#4b5563' }}>
+                        {hiddenBill.electricityType === 'unit' ? hiddenBill.electricityPreviousMeter : '-'}
+                      </td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', color: '#4b5563' }}>
+                        {hiddenBill.electricityType === 'unit' ? hiddenBill.electricityCurrentMeter : '-'}
+                      </td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', color: '#4b5563', fontSize: '0.85rem' }}>
+                        {hiddenBill.electricityType === 'unit' ? `${hiddenBill.electricityUnits} หน่วย @ ${hiddenBill.electricityRate} บ.` : 'เหมาจ่าย'}
+                      </td>
+                      <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{formatTHB(hiddenBill.electricityTotal)}</td>
+                    </tr>
+                  )}
+
+                  {/* Additional Charges */}
+                  {hiddenBill.additionalCharges && hiddenBill.additionalCharges.length > 0 && (
+                    hiddenBill.additionalCharges.map((charge, cIdx) => (
+                      <tr key={cIdx}>
+                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', fontSize: '0.9rem' }}>{charge.description}</td>
+                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', color: '#9ca3af' }}>-</td>
+                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', color: '#9ca3af' }}>-</td>
+                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', color: '#4b5563', fontSize: '0.85rem' }}>บริการเสริม</td>
+                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{formatTHB(charge.amount)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* totals */}
+            <div className="invoice-totals-container">
+              <div className="invoice-totals-box">
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
+                  <span style={{ fontSize: '0.9rem', color: '#4b5563' }}>ยอดรวม (Subtotal)</span>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>
+                    {formatTHB(
+                      hiddenBill.monthlyRent + 
+                      (hiddenBill.waterTotal || 0) + 
+                      (hiddenBill.electricityTotal || 0) + 
+                      ((hiddenBill.additionalCharges || []).reduce((sum, c) => sum + c.amount, 0))
+                    )}
+                  </span>
+                </div>
+                {hiddenBill.discount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb', color: '#ef4444' }}>
+                    <span style={{ fontSize: '0.9rem' }}>ส่วนลด (Discount)</span>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>- {formatTHB(hiddenBill.discount)}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '3px double #4f46e5' }}>
+                  <span style={{ fontSize: '1rem', fontWeight: 700, color: '#111827' }}>ยอดเรียกเก็บสุทธิ</span>
+                  <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#4f46e5' }}>{formatTHB(hiddenBill.totalAmount)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Sign off and notes */}
+            <div className="invoice-footer-grid">
+              <div style={{ fontSize: '0.8rem', color: '#6b7280', lineHeight: '1.5' }}>
+                <p style={{ fontWeight: 600, color: '#374151', marginBottom: '6px' }}>หมายเหตุ:</p>
+                {hiddenBill.remarks && (
+                  <p style={{ color: '#dc2626', fontWeight: 600, marginBottom: '6px', fontSize: '0.85rem' }}>
+                    * หมายเหตุเพิ่มเติม: {hiddenBill.remarks}
+                  </p>
+                )}
+                <p>1. กรุณาชำระเงินภายในวันที่ 5 ของเดือน เพื่อหลีกเลี่ยงค่าปรับล่าช้า</p>
+                <p>2. สามารถชำระผ่านการโอนบัญชีธนาคารแล้วส่งหลักฐานให้กับผู้ดูแลระบบ</p>
+              </div>
+              <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ height: '40px' }}>
+                  {hiddenBill.isPaid && (
+                    <div style={{ border: '2px solid #10b981', color: '#10b981', padding: '2px 10px', borderRadius: '4px', transform: 'rotate(-5deg)', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>
+                      ชำระเงินเรียบร้อยแล้ว
+                    </div>
+                  )}
+                </div>
+                <div style={{ width: '150px', borderBottom: '1px solid #d1d5db', margin: '8px 0 16px 0' }}></div>
+                <p style={{ fontSize: '0.85rem', color: '#4b5563' }}>ผู้ดูแลหอพัก / ผู้รับเงิน</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
+
   );
 }

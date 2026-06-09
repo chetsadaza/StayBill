@@ -15,6 +15,7 @@ const app = express();
 
 // Body parser
 app.use(express.json({
+  limit: '10mb',
   verify: (req, res, buf) => {
     req.rawBody = buf;
   }
@@ -22,6 +23,10 @@ app.use(express.json({
 
 // Enable CORS
 app.use(cors());
+
+// Serve static files
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Dev logging middleware
 if (process.env.NODE_ENV === 'development') {

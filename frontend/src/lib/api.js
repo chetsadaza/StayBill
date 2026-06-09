@@ -87,4 +87,5 @@ export const api = {
   // LINE Integration
   generateLineToken: (tenantId) => request(`/line/generate-token/${tenantId}`, { method: 'POST' }),
   sendBillToLine: (billId) => request(`/line/send-bill/${billId}`, { method: 'POST' }),
+  sendBillImageToLine: (billId, data) => request(`/line/send-bill-image/${billId}`, { method: 'POST', body: data }),
 };

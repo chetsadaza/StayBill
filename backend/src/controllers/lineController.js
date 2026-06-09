@@ -1,4 +1,6 @@
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const Tenant = require('../models/Tenant');
 const Bill = require('../models/Bill');
 
@@ -353,3 +355,65 @@ exports.sendBillNotification = async (req, res, next) => {
     next(error);
   }
 };
+
+// ==============================
+// @desc    Send bill image notification to tenant's LINE
+// @route   POST /api/line/send-bill-image/:billId
+// ==============================
+exports.sendBillImageNotification = async (req, res, next) => {
+  try {
+    const { imageBase64 } = req.body;
+    if (!imageBase64) {
+      return res.status(400).json({ success: false, message: 'กรุณาส่งไฟล์รูปภาพ Base64' });
+    }
+
+    const bill = await Bill.findById(req.params.billId)
+      .populate('room', 'roomNumber floor')
+      .populate('tenant', 'firstName lastName lineUserId');
+
+    if (!bill) {
+      return res.status(404).json({ success: false, message: 'ไม่พบข้อมูลบิล' });
+    }
+
+    if (!bill.tenant || !bill.tenant.lineUserId) {
+      return res.status(400).json({ success: false, message: 'ผู้เช่ารายนี้ยังไม่ได้เชื่อมต่อ LINE' });
+    }
+
+    const lineUserId = bill.tenant.lineUserId;
+    const tenantName = `${bill.tenant.firstName} ${bill.tenant.lastName}`;
+    const roomNumber = bill.room?.roomNumber || '-';
+
+    // Save base64 image to file
+    const base64Data = imageBase64.replace(/^data:image\/png;base64,/, '');
+    const uploadDir = path.join(__dirname, '../../public/uploads/bills');
+
+    // Ensure upload directory exists
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const filename = `bill-${bill._id}.png`;
+    const filePath = path.join(uploadDir, filename);
+    fs.writeFileSync(filePath, base64Data, 'base64');
+
+    // Create public URL
+    const imageUrl = `${APP_BASE_URL}/uploads/bills/${filename}`;
+
+    // Send Image Message
+    const imageMessage = {
+      type: 'image',
+      originalContentUrl: imageUrl,
+      previewImageUrl: imageUrl
+    };
+
+    await linePush(lineUserId, [imageMessage]);
+
+    res.json({
+      success: true,
+      message: `ส่งรูปใบเสร็จค่าเช่าไปยัง LINE ของคุณ ${tenantName} เรียบร้อยแล้ว`
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
