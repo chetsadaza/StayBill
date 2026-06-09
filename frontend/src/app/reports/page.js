@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { api } from '@/lib/api';
 import { formatTHB } from '@/lib/utils';
 import { MdInsertChart, MdFileDownload, MdCalendarToday, MdExpandMore, MdExpandLess } from 'react-icons/md';
@@ -31,6 +31,19 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedMonth, setExpandedMonth] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchReport = async () => {
     try {
@@ -168,20 +181,108 @@ export default function ReportsPage() {
       </div>
 
       {/* Year Selector */}
-      <div className="glass-card filter-bar">
+      <div className="glass-card filter-bar" style={{ zIndex: 100 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
           <MdCalendarToday size={18} /> เลือกปีรายงาน (พ.ศ.):
         </span>
-        <select 
-          className="form-input" 
-          style={{ width: '150px', padding: '8px 12px' }}
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-        >
-          {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-            <option key={year} value={year}>{year + 543}</option>
-          ))}
-        </select>
+        
+        {/* Custom Year Dropdown */}
+        <div ref={dropdownRef} style={{ position: 'relative', width: '150px' }}>
+          <button 
+            type="button"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="form-input" 
+            style={{ 
+              width: '100%', 
+              padding: '8px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'var(--input-bg)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '8px',
+              color: 'var(--text-primary)',
+              cursor: 'pointer',
+              textAlign: 'left'
+            }}
+          >
+            <span>{selectedYear + 543}</span>
+            <MdExpandMore 
+              size={20} 
+              style={{ 
+                color: 'var(--text-secondary)',
+                transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease'
+              }} 
+            />
+          </button>
+          
+          {dropdownOpen && (
+            <div 
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 6px)',
+                left: 0,
+                right: 0,
+                background: 'var(--bg-secondary)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '10px',
+                boxShadow: 'var(--shadow-lg)',
+                padding: '4px',
+                zIndex: 9999,
+                animation: 'pageFadeIn 0.15s ease-out'
+              }}
+            >
+              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => {
+                const isSelected = selectedYear === year;
+                return (
+                  <div
+                    key={year}
+                    onClick={() => {
+                      setSelectedYear(year);
+                      setDropdownOpen(false);
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '0.95rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      background: isSelected ? 'var(--accent-gradient)' : 'transparent',
+                      color: isSelected ? '#ffffff' : 'var(--text-primary)',
+                      transition: 'var(--transition-fast)',
+                      fontWeight: isSelected ? '600' : 'normal',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    <span>{year + 543}</span>
+                    {isSelected && (
+                      <span style={{ 
+                        width: '6px', 
+                        height: '6px', 
+                        borderRadius: '50%', 
+                        background: '#ffffff'
+                      }} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Summary card */}
