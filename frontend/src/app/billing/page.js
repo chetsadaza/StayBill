@@ -109,6 +109,7 @@ export default function BillingPage() {
             console.error('Failed to fetch last bill for room', room.roomNumber, err);
           }
 
+          const needsMeter = room.waterType === 'unit' || room.electricityType === 'unit';
           initialMeterForm.push({
             roomId: room._id,
             roomNumber: room.roomNumber,
@@ -120,7 +121,8 @@ export default function BillingPage() {
             electricityCurrentMeter: prevElec, // default to previous meter
             additionalCharges: [],
             discount: 0,
-            remarks: ''
+            remarks: '',
+            selected: !needsMeter // default to true if flat/free (no meters to fill), false if needs meter reading
           });
         }
 
@@ -140,9 +142,34 @@ export default function BillingPage() {
       if (field !== 'remarks') {
         parsedValue = value === '' ? '' : Number(value);
       }
+      
+      // Auto-select the room if current meter is updated to be different from previous, or discount/remarks added
+      let selected = updated[index].selected;
+      if (field === 'waterCurrentMeter' && parsedValue !== updated[index].waterPreviousMeter) {
+        selected = true;
+      } else if (field === 'electricityCurrentMeter' && parsedValue !== updated[index].electricityPreviousMeter) {
+        selected = true;
+      } else if (field === 'discount' && parsedValue > 0) {
+        selected = true;
+      } else if (field === 'remarks' && parsedValue !== '') {
+        selected = true;
+      }
+
       updated[index] = {
         ...updated[index],
-        [field]: parsedValue
+        [field]: parsedValue,
+        selected
+      };
+      return updated;
+    });
+  };
+
+  const handleToggleSelect = (index) => {
+    setMeterForm(prev => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        selected: !updated[index].selected
       };
       return updated;
     });
@@ -152,6 +179,7 @@ export default function BillingPage() {
     setMeterForm(prev => {
       const updated = [...prev];
       updated[roomIndex].additionalCharges.push({ description: 'บริการอินเทอร์เน็ต/อื่นๆ', amount: 100 });
+      updated[roomIndex].selected = true; // Auto select on new charge
       return updated;
     });
   };
@@ -167,10 +195,12 @@ export default function BillingPage() {
   const handleChargeChange = (roomIndex, chargeIndex, field, value) => {
     setMeterForm(prev => {
       const updated = [...prev];
+      const parsedVal = field === 'amount' ? (value === '' ? '' : Number(value)) : value;
       updated[roomIndex].additionalCharges[chargeIndex] = {
         ...updated[roomIndex].additionalCharges[chargeIndex],
-        [field]: field === 'amount' ? (value === '' ? '' : Number(value)) : value
+        [field]: parsedVal
       };
+      updated[roomIndex].selected = true; // Auto select on charge change
       return updated;
     });
   };
@@ -178,8 +208,16 @@ export default function BillingPage() {
   const handleGenerateSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Filter to only include selected rooms
+      const selectedReadings = meterForm.filter(item => item.selected);
+      
+      if (selectedReadings.length === 0) {
+        showToast('กรุณาเลือกห้องพักที่ต้องการสร้างบิลอย่างน้อย 1 ห้อง', 'warning');
+        return;
+      }
+
       // Sanitize inputs: convert empty strings to 0 before sending to API
-      const sanitizedMeterReadings = meterForm.map(item => ({
+      const sanitizedMeterReadings = selectedReadings.map(item => ({
         ...item,
         waterPreviousMeter: item.waterPreviousMeter === '' ? 0 : item.waterPreviousMeter,
         waterCurrentMeter: item.waterCurrentMeter === '' ? 0 : item.waterCurrentMeter,
@@ -522,10 +560,29 @@ export default function BillingPage() {
                     >
                       {/* Room Header Banner */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
-                        <h4 style={{ color: 'var(--accent-primary)', fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>ห้อง {item.roomNumber}</h4>
-                        <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '20px', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--accent-primary)', fontWeight: 600 }}>
-                          พร้อมคำนวณบิล
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={item.selected || false}
+                            onChange={() => handleToggleSelect(idx)}
+                            style={{ 
+                              width: '18px', 
+                              height: '18px', 
+                              cursor: 'pointer',
+                              accentColor: 'var(--accent-primary)'
+                            }}
+                          />
+                          <h4 style={{ color: 'var(--accent-primary)', fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>ห้อง {item.roomNumber}</h4>
+                        </div>
+                        {item.selected ? (
+                          <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--color-success)', fontWeight: 600 }}>
+                            เลือกคำนวณบิล
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '20px', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-muted)', fontWeight: 600 }}>
+                            ข้ามการสร้างบิล
+                          </span>
+                        )}
                       </div>
                       
                       <div style={{ 

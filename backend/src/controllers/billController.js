@@ -49,11 +49,16 @@ exports.generateBills = async (req, res, next) => {
     const { billingMonth, meterReadings = [] } = req.body;
     const month = billingMonth || getCurrentMonth();
 
-    // Get all occupied rooms
-    const occupiedRooms = await Room.find({ status: 'occupied' }).populate('tenant');
+    // Get occupied rooms (filter by provided meterReadings if available)
+    const filter = { status: 'occupied' };
+    if (meterReadings && meterReadings.length > 0) {
+      const roomIds = meterReadings.map(m => m.roomId);
+      filter._id = { $in: roomIds };
+    }
+    const occupiedRooms = await Room.find(filter).populate('tenant');
 
     if (occupiedRooms.length === 0) {
-      return res.status(400).json({ success: false, message: 'ไม่มีห้องที่มีผู้เช่า' });
+      return res.status(400).json({ success: false, message: 'ไม่มีห้องพักที่ตรงตามเงื่อนไขเพื่อคำนวณบิล' });
     }
 
     const bills = [];
