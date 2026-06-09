@@ -26,14 +26,8 @@ export default function Toast({ message, type = 'success', onClose }) {
 
   return (
     <div 
-      className="glass-card toast-animation" 
+      className="glass-card toast-animation toast-responsive" 
       style={{ 
-        position: 'fixed', 
-        bottom: '24px', 
-        right: '24px', 
-        zIndex: 1100, 
-        minWidth: '320px',
-        maxWidth: '450px',
         padding: '16px 20px',
         display: 'flex',
         alignItems: 'center',
