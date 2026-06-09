@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import BottomNav from '@/components/layout/BottomNav';
@@ -41,6 +42,26 @@ export default function RootLayout({ children }) {
     };
     fetchSettings();
   }, []);
+
+  const pathname = usePathname();
+  const isSharePage = pathname && pathname.startsWith('/share');
+
+  if (isSharePage) {
+    return (
+      <html lang="th" data-theme={theme}>
+        <head>
+          <title>StayBill — ใบแจ้งหนี้ค่าเช่า</title>
+          <meta name="description" content="ดูรายละเอียดใบแจ้งหนี้ค่าเช่าหอพักของคุณ" />
+          <link rel="icon" href="/favicon.ico" />
+        </head>
+        <body style={{ background: 'var(--bg-primary)', margin: 0, padding: 0 }}>
+          <main style={{ minHeight: '100vh' }}>
+            {children}
+          </main>
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="th" data-theme={theme}>
