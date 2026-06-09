@@ -88,13 +88,16 @@ exports.generateBills = async (req, res, next) => {
         );
 
         const additionalCharges = meterData.additionalCharges || [];
+        const discount = meterData.discount || 0;
+        const remarks = meterData.remarks || '';
 
         // Calculate total
         const totalAmount = calculateTotal(
           room.monthlyRent,
           water.total,
           electricity.total,
-          additionalCharges
+          additionalCharges,
+          discount
         );
 
         const bill = await Bill.create({
@@ -118,6 +121,8 @@ exports.generateBills = async (req, res, next) => {
           electricityTotal: electricity.total,
 
           additionalCharges,
+          discount,
+          remarks,
           totalAmount,
           status: 'pending'
         });
@@ -152,8 +157,16 @@ exports.updateBill = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'ไม่พบบิล' });
     }
 
-    // Recalculate if meter readings changed
-    if (req.body.waterCurrentMeter !== undefined || req.body.electricityCurrentMeter !== undefined) {
+    // Recalculate if meter readings, charges, rent or discount changed
+    if (
+      req.body.waterCurrentMeter !== undefined || 
+      req.body.electricityCurrentMeter !== undefined ||
+      req.body.waterPreviousMeter !== undefined ||
+      req.body.electricityPreviousMeter !== undefined ||
+      req.body.additionalCharges !== undefined ||
+      req.body.monthlyRent !== undefined ||
+      req.body.discount !== undefined
+    ) {
       const waterType = req.body.waterType || bill.waterType;
       const waterRate = req.body.waterRate || bill.waterRate;
       const waterPrev = req.body.waterPreviousMeter !== undefined ? req.body.waterPreviousMeter : bill.waterPreviousMeter;
@@ -174,7 +187,8 @@ exports.updateBill = async (req, res, next) => {
 
       const rent = req.body.monthlyRent || bill.monthlyRent;
       const additionalCharges = req.body.additionalCharges || bill.additionalCharges;
-      req.body.totalAmount = calculateTotal(rent, water.total, electricity.total, additionalCharges);
+      const discount = req.body.discount !== undefined ? req.body.discount : bill.discount;
+      req.body.totalAmount = calculateTotal(rent, water.total, electricity.total, additionalCharges, discount);
     }
 
     const updatedBill = await Bill.findByIdAndUpdate(req.params.id, req.body, {

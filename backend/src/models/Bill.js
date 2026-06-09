@@ -52,6 +52,17 @@ const billSchema = new mongoose.Schema({
     amount: { type: Number, default: 0 }
   }],
 
+  // ส่วนลดและหมายเหตุ
+  discount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  remarks: {
+    type: String,
+    default: ''
+  },
+
   totalAmount: {
     type: Number,
     required: true,

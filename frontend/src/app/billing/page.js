@@ -118,7 +118,9 @@ export default function BillingPage() {
             electricityType: room.electricityType,
             electricityPreviousMeter: prevElec,
             electricityCurrentMeter: prevElec, // default to previous meter
-            additionalCharges: []
+            additionalCharges: [],
+            discount: 0,
+            remarks: ''
           });
         }
 
@@ -136,7 +138,7 @@ export default function BillingPage() {
       const updated = [...prev];
       updated[index] = {
         ...updated[index],
-        [field]: Number(value)
+        [field]: field === 'remarks' ? value : Number(value)
       };
       return updated;
     });
@@ -490,124 +492,229 @@ export default function BillingPage() {
                       key={item.roomId} 
                       style={{ 
                         border: '1px solid var(--border-color)', 
-                        borderRadius: '10px', 
-                        padding: '16px',
-                        background: 'rgba(255,255,255,0.01)'
+                        borderRadius: '16px', 
+                        padding: '20px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        boxShadow: 'var(--shadow-sm)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px',
+                        transition: 'var(--transition-smooth)'
                       }}
                     >
-                      <h4 style={{ color: 'var(--accent-primary)', marginBottom: '12px' }}>ห้อง {item.roomNumber}</h4>
+                      {/* Room Header Banner */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+                        <h4 style={{ color: 'var(--accent-primary)', fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>ห้อง {item.roomNumber}</h4>
+                        <span style={{ fontSize: '0.8rem', padding: '4px 10px', borderRadius: '20px', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--accent-primary)', fontWeight: 600 }}>
+                          พร้อมคำนวณบิล
+                        </span>
+                      </div>
                       
-                      <div className="form-grid-2">
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
+                        gap: '16px' 
+                      }}>
                         {/* Water Meter */}
                         {item.waterType === 'unit' ? (
-                          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px' }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px' }}>เลขมิเตอร์น้ำ (หน่วย)</span>
-                            <div style={{ display: 'flex', gap: '8px' }}>
+                          <div style={{ 
+                            background: 'rgba(255, 255, 255, 0.02)', 
+                            padding: '14px', 
+                            borderRadius: '12px',
+                            border: '1px solid rgba(255, 255, 255, 0.04)'
+                          }}>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', color: 'var(--color-info)' }}>
+                              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-info)' }}></span>
+                              เลขมิเตอร์น้ำ (หน่วย)
+                            </span>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                               <div>
-                                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ครั้งก่อน</label>
+                                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>ครั้งก่อน</label>
                                 <input 
                                   type="number" 
                                   className="form-input" 
                                   value={item.waterPreviousMeter}
                                   onChange={(e) => handleMeterChange(idx, 'waterPreviousMeter', e.target.value)}
                                   min="0"
+                                  style={{ padding: '8px 12px', fontSize: '0.9rem' }}
                                 />
                               </div>
                               <div>
-                                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ปัจจุบัน</label>
+                                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>ปัจจุบัน</label>
                                 <input 
                                   type="number" 
                                   className="form-input" 
                                   value={item.waterCurrentMeter}
                                   onChange={(e) => handleMeterChange(idx, 'waterCurrentMeter', e.target.value)}
                                   min="0"
+                                  style={{ padding: '8px 12px', fontSize: '0.9rem' }}
                                 />
                               </div>
                             </div>
                           </div>
                         ) : (
-                          <div style={{ background: 'rgba(255,255,255,0.01)', padding: '12px', borderRadius: '8px', display: 'flex', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>ค่าน้ำ: <strong>{WATER_TYPES[item.waterType]}</strong></span>
+                          <div style={{ 
+                            background: 'rgba(255, 255, 255, 0.01)', 
+                            padding: '14px', 
+                            borderRadius: '12px',
+                            border: '1px dashed var(--border-color)',
+                            display: 'flex', 
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '100%'
+                          }}>
+                            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                              ค่าน้ำ: <strong style={{ color: 'var(--text-primary)' }}>{WATER_TYPES[item.waterType] || item.waterType}</strong>
+                            </span>
                           </div>
                         )}
 
                         {/* Electricity Meter */}
                         {item.electricityType === 'unit' ? (
-                          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px' }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px' }}>เลขมิเตอร์ไฟ (หน่วย)</span>
-                            <div style={{ display: 'flex', gap: '8px' }}>
+                          <div style={{ 
+                            background: 'rgba(255, 255, 255, 0.02)', 
+                            padding: '14px', 
+                            borderRadius: '12px',
+                            border: '1px solid rgba(255, 255, 255, 0.04)'
+                          }}>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', color: 'var(--color-warning)' }}>
+                              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-warning)' }}></span>
+                              เลขมิเตอร์ไฟ (หน่วย)
+                            </span>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                               <div>
-                                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ครั้งก่อน</label>
+                                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>ครั้งก่อน</label>
                                 <input 
                                   type="number" 
                                   className="form-input" 
                                   value={item.electricityPreviousMeter}
                                   onChange={(e) => handleMeterChange(idx, 'electricityPreviousMeter', e.target.value)}
                                   min="0"
+                                  style={{ padding: '8px 12px', fontSize: '0.9rem' }}
                                 />
                               </div>
                               <div>
-                                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ปัจจุบัน</label>
+                                <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>ปัจจุบัน</label>
                                 <input 
                                   type="number" 
                                   className="form-input" 
                                   value={item.electricityCurrentMeter}
                                   onChange={(e) => handleMeterChange(idx, 'electricityCurrentMeter', e.target.value)}
                                   min="0"
+                                  style={{ padding: '8px 12px', fontSize: '0.9rem' }}
                                 />
                               </div>
                             </div>
                           </div>
                         ) : (
-                          <div style={{ background: 'rgba(255,255,255,0.01)', padding: '12px', borderRadius: '8px', display: 'flex', alignItems: 'center' }}>
-                            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>ค่าไฟ: <strong>{ELECTRICITY_TYPES[item.electricityType]}</strong></span>
+                          <div style={{ 
+                            background: 'rgba(255, 255, 255, 0.01)', 
+                            padding: '14px', 
+                            borderRadius: '12px',
+                            border: '1px dashed var(--border-color)',
+                            display: 'flex', 
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '100%'
+                          }}>
+                            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                              ค่าไฟ: <strong style={{ color: 'var(--text-primary)' }}>{ELECTRICITY_TYPES[item.electricityType] || item.electricityType}</strong>
+                            </span>
                           </div>
                         )}
                       </div>
 
                       {/* Additional Charges per room */}
-                      <div style={{ marginTop: '12px', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>ค่าใช้จ่ายเพิ่มเติม (เช่น อินเทอร์เน็ต, ที่จอดรถ, ค่าปรับ)</span>
+                      <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>ค่าใช้จ่ายเพิ่มเติม (เช่น อินเทอร์เน็ต, ที่จอดรถ, ค่าปรับ)</span>
                           <button 
                             type="button" 
                             className="btn btn-secondary" 
-                            style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                            style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', height: '32px' }}
                             onClick={() => handleAddCharge(idx)}
                           >
                             + เพิ่มรายการ
                           </button>
                         </div>
 
-                        {item.additionalCharges.map((charge, cIdx) => (
-                          <div key={cIdx} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
-                            <input 
-                              type="text" 
-                              className="form-input" 
-                              style={{ flex: 2, padding: '6px 10px', fontSize: '0.85rem' }}
-                              value={charge.description}
-                              onChange={(e) => handleChargeChange(idx, cIdx, 'description', e.target.value)}
-                              placeholder="รายการบริการ"
-                            />
+                        {item.additionalCharges.length === 0 ? (
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '8px', border: '1px dashed var(--border-color)', borderRadius: '8px', background: 'rgba(255,255,255,0.005)' }}>
+                            ไม่มีค่าใช้จ่ายเพิ่มเติม
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {item.additionalCharges.map((charge, cIdx) => (
+                              <div key={cIdx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <input 
+                                  type="text" 
+                                  className="form-input" 
+                                  style={{ flex: 2, padding: '8px 12px', fontSize: '0.85rem' }}
+                                  value={charge.description}
+                                  onChange={(e) => handleChargeChange(idx, cIdx, 'description', e.target.value)}
+                                  placeholder="รายการบริการ"
+                                />
+                                <input 
+                                  type="number" 
+                                  className="form-input" 
+                                  style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem' }}
+                                  value={charge.amount}
+                                  onChange={(e) => handleChargeChange(idx, cIdx, 'amount', e.target.value)}
+                                  placeholder="จำนวนเงิน"
+                                  min="0"
+                                />
+                                <button 
+                                  type="button" 
+                                  className="btn btn-danger" 
+                                  style={{ padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '36px', width: '36px' }}
+                                  onClick={() => handleRemoveCharge(idx, cIdx)}
+                                >
+                                  <MdDelete size={16} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Discount & Remarks */}
+                      <div style={{ 
+                        borderTop: '1px solid var(--border-color)', 
+                        paddingTop: '16px', 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                        gap: '16px' 
+                      }}>
+                        <div>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px', color: 'var(--color-danger)' }}>
+                            ส่วนลด (บาท)
+                          </label>
+                          <div style={{ position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>฿</span>
                             <input 
                               type="number" 
                               className="form-input" 
-                              style={{ flex: 1, padding: '6px 10px', fontSize: '0.85rem' }}
-                              value={charge.amount}
-                              onChange={(e) => handleChargeChange(idx, cIdx, 'amount', e.target.value)}
-                              placeholder="จำนวนเงิน"
+                              placeholder="0"
+                              value={item.discount || ''}
+                              onChange={(e) => handleMeterChange(idx, 'discount', e.target.value)}
                               min="0"
+                              style={{ paddingLeft: '28px', paddingRight: '12px', height: '38px', fontSize: '0.9rem' }}
                             />
-                            <button 
-                              type="button" 
-                              className="btn btn-danger" 
-                              style={{ padding: '6px' }}
-                              onClick={() => handleRemoveCharge(idx, cIdx)}
-                            >
-                              <MdDelete size={14} />
-                            </button>
                           </div>
-                        ))}
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+                            หมายเหตุประจำห้อง / บันทึกเพิ่มเติม
+                          </label>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            placeholder="เช่น คืนค่าประกัน, หักค่าซ่อมอุปกรณ์"
+                            value={item.remarks || ''}
+                            onChange={(e) => handleMeterChange(idx, 'remarks', e.target.value)}
+                            style={{ height: '38px', fontSize: '0.9rem' }}
+                          />
+                        </div>
                       </div>
 
                     </div>
@@ -763,8 +870,21 @@ export default function BillingPage() {
                   <div className="invoice-totals-box">
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb' }}>
                       <span style={{ fontSize: '0.9rem', color: '#4b5563' }}>ยอดรวม (Subtotal)</span>
-                      <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{formatTHB(activeBill.totalAmount)}</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>
+                        {formatTHB(
+                          activeBill.monthlyRent + 
+                          (activeBill.waterTotal || 0) + 
+                          (activeBill.electricityTotal || 0) + 
+                          ((activeBill.additionalCharges || []).reduce((sum, c) => sum + c.amount, 0))
+                        )}
+                      </span>
                     </div>
+                    {activeBill.discount > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #e5e7eb', color: '#ef4444' }}>
+                        <span style={{ fontSize: '0.9rem' }}>ส่วนลด (Discount)</span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>- {formatTHB(activeBill.discount)}</span>
+                      </div>
+                    )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '3px double #4f46e5' }}>
                       <span style={{ fontSize: '1rem', fontWeight: 700, color: '#111827' }}>ยอดเรียกเก็บสุทธิ</span>
                       <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#4f46e5' }}>{formatTHB(activeBill.totalAmount)}</span>
@@ -776,6 +896,11 @@ export default function BillingPage() {
                 <div className="invoice-footer-grid">
                   <div style={{ fontSize: '0.8rem', color: '#6b7280', lineHeight: '1.5' }}>
                     <p style={{ fontWeight: 600, color: '#374151', marginBottom: '6px' }}>หมายเหตุ:</p>
+                    {activeBill.remarks && (
+                      <p style={{ color: '#dc2626', fontWeight: 600, marginBottom: '6px', fontSize: '0.85rem' }}>
+                        * หมายเหตุเพิ่มเติม: {activeBill.remarks}
+                      </p>
+                    )}
                     <p>1. กรุณาชำระเงินภายในวันที่ 5 ของเดือน เพื่อหลีกเลี่ยงค่าปรับล่าช้า</p>
                     <p>2. สามารถชำระผ่านการโอนบัญชีธนาคารแล้วส่งหลักฐานให้กับผู้ดูแลระบบ</p>
                   </div>

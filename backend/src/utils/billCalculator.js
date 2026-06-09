@@ -55,7 +55,7 @@ exports.calculateElectricity = (type, rate, previousMeter = 0, currentMeter = 0)
  * @param {Array} additionalCharges - ค่าใช้จ่ายเพิ่มเติม [{description, amount}]
  * @returns {number} totalAmount
  */
-exports.calculateTotal = (rent, waterTotal, electricityTotal, additionalCharges = []) => {
+exports.calculateTotal = (rent, waterTotal, electricityTotal, additionalCharges = [], discount = 0) => {
   const additionalTotal = additionalCharges.reduce((sum, charge) => sum + (charge.amount || 0), 0);
-  return rent + waterTotal + electricityTotal + additionalTotal;
+  return Math.max(0, rent + waterTotal + electricityTotal + additionalTotal - discount);
 };
