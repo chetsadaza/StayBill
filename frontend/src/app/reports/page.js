@@ -245,82 +245,120 @@ export default function ReportsPage() {
           </table>
         </div>
 
-        {/* Mobile Card List View */}
-        <div className="mobile-only" style={{ gap: '12px', padding: '16px' }}>
+        {/* Mobile Grid View */}
+        <div className="mobile-only" style={{ padding: '12px', gap: '0' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>กำลังโหลดข้อมูล...</div>
           ) : reportData?.monthly ? (
-            reportData.monthly.map((monthItem, idx) => {
-              const isExpanded = expandedMonth === idx;
-              return (
-                <div 
-                  key={idx} 
-                  className="mobile-card" 
-                  style={{ 
-                    padding: '12px 16px', 
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    gap: isExpanded ? '14px' : '0px'
-                  }}
-                  onClick={() => setExpandedMonth(isExpanded ? null : idx)}
-                >
-                  {/* Card Header - always visible */}
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    width: '100%'
-                  }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <span className="mobile-card-title" style={{ fontSize: '1.05rem', fontWeight: 700 }}>{thaiMonths[idx]}</span>
-                      <span className="badge badge-info" style={{ textTransform: 'none', padding: '2px 8px', fontSize: '0.7rem', width: 'fit-content' }}>
-                        {monthItem.paidCount} / {monthItem.totalBills} ชำระ
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: 700, color: 'var(--color-success)', fontSize: '1rem' }}>
-                        {formatTHB(monthItem.totalRevenue)}
-                      </span>
-                      {isExpanded ? <MdExpandLess size={20} style={{ color: 'var(--text-muted)' }} /> : <MdExpandMore size={20} style={{ color: 'var(--text-muted)' }} />}
-                    </div>
-                  </div>
-
-                  {/* Card Body - visible only when expanded */}
-                  {isExpanded && (
-                    <div className="mobile-card-body" style={{ 
-                      gap: '6px', 
-                      borderTop: '1px dashed var(--border-color)', 
-                      paddingTop: '12px',
-                      width: '100%',
-                      animation: 'pageFadeIn 0.2s ease-out'
-                    }}>
-                      <div className="mobile-card-row">
-                        <span className="mobile-card-label">ค่าเช่า:</span>
-                        <span className="mobile-card-value">{formatTHB(monthItem.rentRevenue)}</span>
-                      </div>
-                      <div className="mobile-card-row">
-                        <span className="mobile-card-label">ค่าน้ำ:</span>
-                        <span className="mobile-card-value">{formatTHB(monthItem.waterRevenue)}</span>
-                      </div>
-                      <div className="mobile-card-row">
-                        <span className="mobile-card-label">ค่าไฟ:</span>
-                        <span className="mobile-card-value">{formatTHB(monthItem.electricityRevenue)}</span>
-                      </div>
-                      <div className="mobile-card-row">
-                        <span className="mobile-card-label">อื่นๆ/เสริม:</span>
-                        <span className="mobile-card-value">{formatTHB(monthItem.otherRevenue)}</span>
-                      </div>
-                      <div className="mobile-card-row" style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px', marginTop: '4px' }}>
-                        <span className="mobile-card-label" style={{ fontWeight: 700 }}>ยอดรวมรายรับจริง:</span>
-                        <span className="mobile-card-value" style={{ fontWeight: 700, color: 'var(--color-success)' }}>
-                          {formatTHB(monthItem.totalRevenue)}
+            <>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(3, 1fr)', 
+                gap: '8px',
+              }}>
+                {reportData.monthly.map((monthItem, idx) => {
+                  const isExpanded = expandedMonth === idx;
+                  const hasRevenue = monthItem.totalRevenue > 0;
+                  return (
+                    <div 
+                      key={idx}
+                      style={{
+                        gridColumn: isExpanded ? '1 / -1' : 'auto',
+                      }}
+                    >
+                      <div
+                        onClick={() => setExpandedMonth(isExpanded ? null : idx)}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '12px 6px',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          background: isExpanded 
+                            ? 'var(--accent-gradient)' 
+                            : hasRevenue 
+                              ? 'var(--bg-card-hover)' 
+                              : 'var(--bg-card)',
+                          border: isExpanded 
+                            ? '1px solid transparent' 
+                            : hasRevenue 
+                              ? '1px solid var(--border-hover)' 
+                              : '1px solid var(--border-color)',
+                          transition: 'var(--transition-fast)',
+                          color: isExpanded ? '#fff' : 'inherit',
+                        }}
+                      >
+                        <span style={{ 
+                          fontSize: '0.82rem', 
+                          fontWeight: 700, 
+                          fontFamily: 'var(--font-heading)',
+                          color: isExpanded ? '#fff' : 'var(--text-primary)',
+                        }}>
+                          {thaiMonths[idx]}
+                        </span>
+                        <span style={{ 
+                          fontSize: '0.65rem', 
+                          color: isExpanded ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)',
+                        }}>
+                          {monthItem.paidCount}/{monthItem.totalBills} ชำระ
+                        </span>
+                        <span style={{ 
+                          fontSize: '0.85rem', 
+                          fontWeight: 700,
+                          color: isExpanded 
+                            ? '#fff' 
+                            : hasRevenue 
+                              ? 'var(--color-success)' 
+                              : 'var(--text-muted)',
+                          marginTop: '2px',
+                        }}>
+                          {hasRevenue ? formatTHB(monthItem.totalRevenue) : '฿0'}
                         </span>
                       </div>
+
+                      {/* Expanded detail panel */}
+                      {isExpanded && (
+                        <div style={{
+                          marginTop: '8px',
+                          padding: '14px 16px',
+                          borderRadius: '12px',
+                          background: 'var(--bg-card)',
+                          border: '1px solid var(--border-color)',
+                          animation: 'pageFadeIn 0.2s ease-out',
+                        }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div className="mobile-card-row">
+                              <span className="mobile-card-label">ค่าเช่า:</span>
+                              <span className="mobile-card-value">{formatTHB(monthItem.rentRevenue)}</span>
+                            </div>
+                            <div className="mobile-card-row">
+                              <span className="mobile-card-label">ค่าน้ำ:</span>
+                              <span className="mobile-card-value">{formatTHB(monthItem.waterRevenue)}</span>
+                            </div>
+                            <div className="mobile-card-row">
+                              <span className="mobile-card-label">ค่าไฟ:</span>
+                              <span className="mobile-card-value">{formatTHB(monthItem.electricityRevenue)}</span>
+                            </div>
+                            <div className="mobile-card-row">
+                              <span className="mobile-card-label">อื่นๆ/เสริม:</span>
+                              <span className="mobile-card-value">{formatTHB(monthItem.otherRevenue)}</span>
+                            </div>
+                            <div className="mobile-card-row" style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '6px', marginTop: '4px' }}>
+                              <span className="mobile-card-label" style={{ fontWeight: 700 }}>ยอดรวมรายรับจริง:</span>
+                              <span className="mobile-card-value" style={{ fontWeight: 700, color: 'var(--color-success)' }}>
+                                {formatTHB(monthItem.totalRevenue)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })
+                  );
+                })}
+              </div>
+            </>
           ) : (
             <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>ไม่มีข้อมูลรายงาน</div>
           )}
