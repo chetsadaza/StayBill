@@ -158,15 +158,37 @@
   background: var(--border-color);
 }
 
+.profileContainer {
+  position: relative;
+  display: inline-block;
+}
+
 .profileArea {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  padding: 6px 14px;
+  border-radius: 30px;
+  transition: all var(--transition-fast) ease;
+  user-select: none;
+}
+
+.profileArea:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.1);
+}
+
+.profileArea:active {
+  transform: scale(0.98);
 }
 
 .profileAvatar {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--accent-gradient);
   display: flex;
@@ -174,23 +196,166 @@
   justify-content: center;
   font-weight: 600;
   color: white;
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+  font-size: 0.85rem;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
 }
 
-.profileInfo {
+.profileInfoRow {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .profileName {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.profileRoleInline {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Dropdown Menu styling */
+.profileDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 250px;
+  background: var(--sidebar-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top right;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdownHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px;
+}
+
+.dropdownAvatarLarge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  font-size: 1.15rem;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.35);
+}
+
+.dropdownInfoLarge {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dropdownNameLarge {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdownEmailLarge {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdownDivider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 2px 0;
+}
+
+.dropdownMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all var(--transition-fast) ease;
+}
+
+.dropdownItem:hover {
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
 }
 
-.profileRole {
-  font-size: 0.75rem;
+.dropdownItemIcon {
   color: var(--text-muted);
+  transition: color var(--transition-fast) ease;
+}
+
+.dropdownItem:hover .dropdownItemIcon {
+  color: var(--accent-primary);
+}
+
+.dropdownItemLogout {
+  color: var(--color-danger);
+}
+
+.dropdownItemLogout:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+}
+
+.dropdownItemLogout .dropdownItemIcon {
+  color: var(--color-danger);
+  opacity: 0.8;
+}
+
+.dropdownItemLogout:hover .dropdownItemIcon {
+  color: var(--color-danger);
+  opacity: 1;
 }
 
 .themeToggle {

@@ -41,6 +41,11 @@ export default function RootLayout({ children }) {
       }
     };
     fetchSettings();
+
+    window.addEventListener('settingsUpdated', fetchSettings);
+    return () => {
+      window.removeEventListener('settingsUpdated', fetchSettings);
+    };
   }, []);
 
   const pathname = usePathname();
