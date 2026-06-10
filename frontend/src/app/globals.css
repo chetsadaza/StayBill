@@ -1330,3 +1330,23 @@ select.form-input option {
   }
 }
 
+/* Toast Responsive Styles */
+.toast-responsive {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  min-width: 320px;
+  max-width: 450px;
+}
+
+@media (max-width: 768px) {
+  .toast-responsive {
+    bottom: 90px;
+    right: 16px;
+    left: 16px;
+    min-width: calc(100% - 32px);
+    max-width: calc(100% - 32px);
+  }
+}
+

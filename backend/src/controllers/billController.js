@@ -3,6 +3,7 @@ const Room = require('../models/Room');
 const Tenant = require('../models/Tenant');
 const { calculateWater, calculateElectricity, calculateTotal } = require('../utils/billCalculator');
 const { getCurrentMonth } = require('../utils/helpers');
+const { sendPaymentNotification } = require('./lineController');
 
 // @desc    Get all bills (filter by month)
 // @route   GET /api/bills
@@ -228,6 +229,11 @@ exports.payBill = async (req, res, next) => {
     if (!bill) {
       return res.status(404).json({ success: false, message: 'ไม่พบบิล' });
     }
+
+    // ส่งข้อความแจ้งเตือนการจ่ายเงินสำเร็จไปยัง LINE ของผู้เช่า
+    sendPaymentNotification(bill._id).catch(err => {
+      console.error('Failed to send payment LINE notification:', err);
+    });
 
     res.json({ success: true, data: bill });
   } catch (error) {

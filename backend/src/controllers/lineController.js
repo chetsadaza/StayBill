@@ -419,3 +419,154 @@ exports.sendBillImageNotification = async (req, res, next) => {
   }
 };
 
+// ==============================
+// @desc    Send payment receipt notification to tenant's LINE
+// ==============================
+exports.sendPaymentNotification = async (billId) => {
+  try {
+    const bill = await Bill.findById(billId)
+      .populate('room', 'roomNumber floor')
+      .populate('tenant', 'firstName lastName lineUserId');
+
+    if (!bill) {
+      console.error('Payment notification failed: Bill not found');
+      return;
+    }
+
+    if (!bill.tenant || !bill.tenant.lineUserId) {
+      console.log(`Tenant for room ${bill.room?.roomNumber} has not linked LINE. Skipping notification.`);
+      return;
+    }
+
+    const lineUserId = bill.tenant.lineUserId;
+    const tenantName = `${bill.tenant.firstName} ${bill.tenant.lastName}`;
+    const roomNumber = bill.room?.roomNumber || '-';
+    const billingMonth = bill.billingMonth;
+    const [year, month] = billingMonth.split('-');
+    const thaiMonths = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    const thaiMonth = `${thaiMonths[parseInt(month)]} ${parseInt(year) + 543}`;
+    const totalAmount = bill.totalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const billDetailUrl = `${APP_BASE_URL}/share/bill/${bill._id}`;
+    
+    // Format paid date
+    const paidDateStr = bill.paidDate 
+      ? new Date(bill.paidDate).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    const flexMessage = {
+      type: 'flex',
+      altText: `🟢 ยืนยันการชำระเงิน ห้อง ${roomNumber} ประจำเดือน ${thaiMonth} เรียบร้อยแล้ว`,
+      contents: {
+        type: 'bubble',
+        size: 'giga',
+        header: {
+          type: 'box',
+          layout: 'vertical',
+          backgroundColor: '#10b981',
+          paddingAll: '20px',
+          contents: [
+            {
+              type: 'text',
+              text: '🟢 ยืนยันการชำระเงินสำเร็จ',
+              color: '#FFFFFF',
+              weight: 'bold',
+              size: 'lg'
+            },
+            {
+              type: 'text',
+              text: `ได้รับเงินค่าเช่าห้องพักประจำเดือน ${thaiMonth} แล้ว`,
+              color: '#D1FAE5',
+              size: 'xs',
+              margin: 'sm'
+            }
+          ]
+        },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          paddingAll: '20px',
+          spacing: 'md',
+          contents: [
+            {
+              type: 'box',
+              layout: 'horizontal',
+              contents: [
+                { type: 'text', text: 'ผู้เช่า', color: '#8b8b8b', size: 'sm', flex: 3 },
+                { type: 'text', text: tenantName, weight: 'bold', size: 'sm', flex: 5, align: 'end' }
+              ]
+            },
+            {
+              type: 'box',
+              layout: 'horizontal',
+              contents: [
+                { type: 'text', text: 'ห้องพัก', color: '#8b8b8b', size: 'sm', flex: 3 },
+                { type: 'text', text: `ห้อง ${roomNumber}`, weight: 'bold', size: 'sm', flex: 5, align: 'end' }
+              ]
+            },
+            {
+              type: 'box',
+              layout: 'horizontal',
+              contents: [
+                { type: 'text', text: 'วันเวลาที่ชำระ', color: '#8b8b8b', size: 'sm', flex: 3 },
+                { type: 'text', text: paidDateStr + ' น.', weight: 'bold', size: 'sm', flex: 5, align: 'end' }
+              ]
+            },
+            { type: 'separator', margin: 'lg' },
+            {
+              type: 'box',
+              layout: 'horizontal',
+              margin: 'lg',
+              contents: [
+                { type: 'text', text: 'ยอดชำระทั้งสิ้น', weight: 'bold', size: 'md', flex: 5 },
+                { type: 'text', text: `฿${totalAmount}`, weight: 'bold', size: 'lg', color: '#10b981', flex: 3, align: 'end' }
+              ]
+            },
+            {
+              type: 'box',
+              layout: 'horizontal',
+              contents: [
+                { type: 'text', text: 'สถานะ', color: '#8b8b8b', size: 'sm', flex: 3 },
+                { type: 'text', text: 'ชำระเงินเรียบร้อยแล้ว', weight: 'bold', color: '#10b981', size: 'sm', flex: 5, align: 'end' }
+              ]
+            },
+            { type: 'separator', margin: 'lg' },
+            {
+              type: 'text',
+              text: '🙏 หอพักขอขอบพระคุณที่ชำระเงินตรงเวลาค่ะ ✨',
+              color: '#059669',
+              size: 'sm',
+              align: 'center',
+              weight: 'bold',
+              margin: 'lg',
+              wrap: true
+            }
+          ]
+        },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          paddingAll: '16px',
+          spacing: 'sm',
+          contents: [
+            {
+              type: 'button',
+              style: 'primary',
+              color: '#10b981',
+              action: {
+                type: 'uri',
+                label: 'ดูรายละเอียดใบเสร็จรับเงิน',
+                uri: billDetailUrl
+              }
+            }
+          ]
+        }
+      }
+    };
+
+    await linePush(lineUserId, [flexMessage]);
+    console.log(`Payment confirmation LINE notification sent to ${tenantName}`);
+  } catch (error) {
+    console.error('Failed to send payment LINE notification:', error);
+  }
+};
+
