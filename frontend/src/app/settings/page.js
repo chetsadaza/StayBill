@@ -218,7 +218,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <>
+    <div style={{ width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
       <div className="page-header">
         <div>
           <h2 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>ตั้งค่าระบบ</h2>
@@ -249,7 +249,7 @@ export default function SettingsPage() {
         error ? (
           <div className="glass-card" style={{ padding: '24px', color: 'var(--color-danger)' }}>{error}</div>
         ) : (
-          <form onSubmit={handleSubmitSettings} style={{ width: '100%', maxWidth: '800px' }}>
+          <form onSubmit={handleSubmitSettings}>
             <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               
               {/* Dormitory Info */}
@@ -259,20 +259,40 @@ export default function SettingsPage() {
                 </h3>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div className="form-group">
-                    <label className="form-label">ชื่อหอพัก *</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      name="dormitoryName" 
-                      value={settings.dormitoryName}
-                      onChange={handleInputChange}
-                      placeholder="เช่น หอพักแสนสุข" 
-                      required
-                    />
+                  <div className="form-grid-2">
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">ชื่อหอพัก *</label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        name="dormitoryName" 
+                        value={settings.dormitoryName}
+                        onChange={handleInputChange}
+                        placeholder="เช่น หอพักแสนสุข" 
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">เบอร์โทรศัพท์ติดต่อ</label>
+                      <div style={{ position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                          <MdPhone size={18} />
+                        </span>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          name="phone" 
+                          value={settings.phone}
+                          onChange={handleInputChange}
+                          placeholder="เช่น 081-234-5678"
+                          style={{ paddingLeft: '38px' }}
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">ที่อยู่หอพัก</label>
                     <textarea 
                       className="form-input" 
@@ -283,24 +303,6 @@ export default function SettingsPage() {
                       rows="3"
                       style={{ resize: 'vertical', fontFamily: 'inherit' }}
                     />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">เบอร์โทรศัพท์ติดต่อ</label>
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
-                        <MdPhone size={18} />
-                      </span>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        name="phone" 
-                        value={settings.phone}
-                        onChange={handleInputChange}
-                        placeholder="เช่น 081-234-5678"
-                        style={{ paddingLeft: '38px' }}
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
@@ -373,7 +375,6 @@ export default function SettingsPage() {
 
       {/* Tab Contents: Admin Management */}
       {activeTab === 'admins' && (
-        <div style={{ width: '100%', maxWidth: '1000px' }}>
           <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <h3 style={{ fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)' }}>
@@ -504,8 +505,7 @@ export default function SettingsPage() {
               </>
             )}
           </div>
-        </div>
-      )}
+        )}
 
       {/* Modal: Add/Edit Admin Account */}
       {isAdminModalOpen && (
@@ -629,6 +629,6 @@ export default function SettingsPage() {
           onCancel={() => setConfirmState(prev => ({ ...prev, show: false }))}
         />
       )}
-    </>
+    </div>
   );
 }
