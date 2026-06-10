@@ -88,4 +88,10 @@ export const api = {
   generateLineToken: (tenantId) => request(`/line/generate-token/${tenantId}`, { method: 'POST' }),
   sendBillToLine: (billId) => request(`/line/send-bill/${billId}`, { method: 'POST' }),
   sendBillImageToLine: (billId, data) => request(`/line/send-bill-image/${billId}`, { method: 'POST', body: data }),
+
+  // Users (Admins)
+  getUsers: () => request('/users'),
+  createUser: (data) => request('/users', { method: 'POST', body: data }),
+  updateUser: (id, data) => request(`/users/${id}`, { method: 'PUT', body: data }),
+  deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
 };

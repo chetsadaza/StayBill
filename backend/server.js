@@ -8,8 +8,23 @@ const errorHandler = require('./src/middleware/errorHandler');
 // Load env vars
 dotenv.config();
 
-// Connect to database
-connectDB();
+// Connect to database & seed default admin
+connectDB().then(() => {
+  const User = require('./src/models/User');
+  User.countDocuments().then(count => {
+    if (count === 0) {
+      User.create({
+        name: 'เจษฎา มาตเรียง',
+        email: 'jed667788@gmail.com',
+        password: 'password123',
+        role: 'admin',
+        isActive: true
+      }).then(() => {
+        console.log('🌱 Default admin account seeded successfully (เจษฎา มาตเรียง / password123)');
+      });
+    }
+  });
+});
 
 const app = express();
 
@@ -40,6 +55,7 @@ app.use('/api/bills', require('./src/routes/bills'));
 app.use('/api/reports', require('./src/routes/reports'));
 app.use('/api/settings', require('./src/routes/settings'));
 app.use('/api/line', require('./src/routes/line'));
+app.use('/api/users', require('./src/routes/users'));
 
 // Root path handler
 app.get('/', (req, res) => {
