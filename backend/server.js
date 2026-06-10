@@ -56,6 +56,7 @@ app.use('/api/reports', require('./src/routes/reports'));
 app.use('/api/settings', require('./src/routes/settings'));
 app.use('/api/line', require('./src/routes/line'));
 app.use('/api/users', require('./src/routes/users'));
+app.use('/api/auth', require('./src/routes/auth'));
 
 // Root path handler
 app.get('/', (req, res) => {

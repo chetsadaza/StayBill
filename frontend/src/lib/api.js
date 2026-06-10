@@ -8,6 +8,14 @@ async function request(endpoint, options = {}) {
     ...options.headers,
   };
 
+  // Attach JWT token if present in localStorage
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('staybill-token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+
   const config = {
     ...options,
     headers,
@@ -33,6 +41,10 @@ async function request(endpoint, options = {}) {
 }
 
 export const api = {
+  // Auth
+  login: (email, password) => request('/auth/login', { method: 'POST', body: { email, password } }),
+  getMe: () => request('/auth/me'),
+
   // Rooms
   getRooms: (params) => {
     let query = '';

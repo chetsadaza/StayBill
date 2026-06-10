@@ -13,11 +13,17 @@ import Link from 'next/link';
 import Toast from '@/components/ui/Toast';
 import styles from './Layout.module.css';
 
-export default function Header({ dormitoryName = 'หอพัก StayBill', toggleSidebar, theme, toggleTheme }) {
+export default function Header({ dormitoryName = 'หอพัก StayBill', toggleSidebar, theme, toggleTheme, user, onLogout }) {
   const [currentDate, setCurrentDate] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const dropdownRef = useRef(null);
+
+  // Derive display info from user prop
+  const displayName = user?.name || 'ผู้ใช้ระบบ';
+  const displayEmail = user?.email || '';
+  const displayInitial = displayName.charAt(0);
+  const displayRole = user?.role === 'admin' ? 'admin' : 'member';
 
   // Toggle dropdown
   const toggleDropdown = () => {
@@ -48,7 +54,11 @@ export default function Header({ dormitoryName = 'หอพัก StayBill', tog
   const handleLogout = (e) => {
     e.preventDefault();
     setIsDropdownOpen(false);
-    setToast({ show: true, message: 'ออกจากระบบสำเร็จ', type: 'success' });
+    if (onLogout) {
+      onLogout();
+    } else {
+      setToast({ show: true, message: 'ออกจากระบบสำเร็จ', type: 'success' });
+    }
   };
 
   return (
@@ -92,10 +102,10 @@ export default function Header({ dormitoryName = 'หอพัก StayBill', tog
           {/* Profile Dropdown Container */}
           <div className={styles.profileContainer} ref={dropdownRef}>
             <div onClick={toggleDropdown} className={styles.profileArea}>
-              <div className={styles.profileAvatar}>จ</div>
+              <div className={styles.profileAvatar}>{displayInitial}</div>
               <div className={styles.profileInfoRow}>
-                <span className={styles.profileName}>เจษฎา มาตเรียง</span>
-                <span className={styles.profileRoleInline}>member</span>
+                <span className={styles.profileName}>{displayName}</span>
+                <span className={styles.profileRoleInline}>{displayRole}</span>
                 <MdKeyboardArrowDown size={18} style={{ 
                   color: 'var(--text-secondary)',
                   transform: isDropdownOpen ? 'rotate(180deg)' : 'none',
@@ -108,10 +118,10 @@ export default function Header({ dormitoryName = 'หอพัก StayBill', tog
               <div className={styles.profileDropdown}>
                 {/* Dropdown Header */}
                 <div className={styles.dropdownHeader}>
-                  <div className={styles.dropdownAvatarLarge}>จ</div>
+                  <div className={styles.dropdownAvatarLarge}>{displayInitial}</div>
                   <div className={styles.dropdownInfoLarge}>
-                    <span className={styles.dropdownNameLarge}>เจษฎา มาตเรียง</span>
-                    <span className={styles.dropdownEmailLarge}>jed667788@gmail.com</span>
+                    <span className={styles.dropdownNameLarge}>{displayName}</span>
+                    <span className={styles.dropdownEmailLarge}>{displayEmail}</span>
                   </div>
                 </div>
 
