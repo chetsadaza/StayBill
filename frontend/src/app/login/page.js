@@ -58,39 +58,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{
+    <div className="login-bg-container" style={{
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'var(--bg-primary)',
       position: 'relative',
       overflow: 'hidden',
       padding: '20px'
     }}>
-      {/* Background Decorative Elements */}
-      <div style={{
-        position: 'absolute',
-        top: '-20%',
-        left: '-10%',
-        width: '500px',
-        height: '500px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)',
-        filter: 'blur(60px)',
-        pointerEvents: 'none'
-      }} />
-      <div style={{
-        position: 'absolute',
-        bottom: '-15%',
-        right: '-5%',
-        width: '450px',
-        height: '450px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%)',
-        filter: 'blur(60px)',
-        pointerEvents: 'none'
-      }} />
+
 
       {/* Theme Toggle - Top Right */}
       <button
@@ -361,8 +338,35 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Inline keyframes for animations */}
+      {/* Inline styles for background and animations */}
       <style jsx global>{`
+        .login-bg-container {
+          background-image: url('/images/%E0%B8%9B%E0%B8%81login%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%96%E0%B8%B7%E0%B8%AD.jpg');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          transition: background-image 0.5s ease;
+        }
+        @media (min-width: 768px) {
+          .login-bg-container {
+            background-image: url('/images/%E0%B8%9B%E0%B8%81login%E0%B8%84%E0%B8%AD%E0%B8%A1.jpg');
+          }
+        }
+        .login-bg-container::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.05); /* Very subtle dark overlay */
+          z-index: 0;
+          pointer-events: none;
+          transition: background 0.3s ease;
+        }
+        [data-theme="light"] .login-bg-container::before {
+          background: rgba(255, 255, 255, 0.05); /* Very subtle light overlay */
+        }
         @keyframes loginFadeIn {
           from {
             opacity: 0;
