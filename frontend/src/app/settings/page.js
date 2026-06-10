@@ -218,7 +218,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div style={{ width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
+    <div style={{ width: '100%' }}>
       <div className="page-header">
         <div>
           <h2 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>ตั้งค่าระบบ</h2>
@@ -226,19 +226,39 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Glassmorphic Tabs Navigation */}
-      <div className="glass-card" style={{ display: 'flex', gap: '12px', padding: '12px 20px', marginBottom: '24px' }}>
+      {/* Borderless Horizontal Tab Navigation */}
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '24px', paddingBottom: '2px', gap: '24px' }}>
         <button 
-          className={`btn ${activeTab === 'general' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveTab('general')}
-          style={{ padding: '8px 20px', fontSize: '0.9rem' }}
+          style={{
+            background: 'none',
+            border: 'none',
+            borderBottom: activeTab === 'general' ? '2px solid var(--accent-primary)' : '2px solid transparent',
+            color: activeTab === 'general' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            padding: '12px 4px',
+            fontSize: '0.95rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'var(--transition-fast)',
+            marginBottom: '-3px'
+          }}
         >
           ตั้งค่าทั่วไป
         </button>
         <button 
-          className={`btn ${activeTab === 'admins' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveTab('admins')}
-          style={{ padding: '8px 20px', fontSize: '0.9rem' }}
+          style={{
+            background: 'none',
+            border: 'none',
+            borderBottom: activeTab === 'admins' ? '2px solid var(--accent-primary)' : '2px solid transparent',
+            color: activeTab === 'admins' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            padding: '12px 4px',
+            fontSize: '0.95rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'var(--transition-fast)',
+            marginBottom: '-3px'
+          }}
         >
           จัดการบัญชีแอดมิน
         </button>
@@ -251,123 +271,127 @@ export default function SettingsPage() {
         ) : (
           <form onSubmit={handleSubmitSettings}>
             <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              
-              {/* Dormitory Info */}
-              <div>
-                <h3 style={{ fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--accent-primary)' }}>
-                  <MdBusiness size={20} /> ข้อมูลหอพัก
-                </h3>
+              <div style={{ maxWidth: '800px', width: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div className="form-grid-2">
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">ชื่อหอพัก *</label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        name="dormitoryName" 
-                        value={settings.dormitoryName}
-                        onChange={handleInputChange}
-                        placeholder="เช่น หอพักแสนสุข" 
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">เบอร์โทรศัพท์ติดต่อ</label>
-                      <div style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
-                          <MdPhone size={18} />
-                        </span>
+                {/* Dormitory Info */}
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', color: 'var(--text-primary)' }}>
+                    <span style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center' }}><MdBusiness size={20} /></span>
+                    ข้อมูลหอพัก
+                  </h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div className="form-grid-2">
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">ชื่อหอพัก *</label>
                         <input 
                           type="text" 
                           className="form-input" 
-                          name="phone" 
-                          value={settings.phone}
+                          name="dormitoryName" 
+                          value={settings.dormitoryName}
                           onChange={handleInputChange}
-                          placeholder="เช่น 081-234-5678"
+                          placeholder="เช่น หอพักแสนสุข" 
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">เบอร์โทรศัพท์ติดต่อ</label>
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                            <MdPhone size={18} />
+                          </span>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            name="phone" 
+                            value={settings.phone}
+                            onChange={handleInputChange}
+                            placeholder="เช่น 081-234-5678"
+                            style={{ paddingLeft: '38px' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">ที่อยู่หอพัก</label>
+                      <textarea 
+                        className="form-input" 
+                        name="address" 
+                        value={settings.address}
+                        onChange={handleInputChange}
+                        placeholder="เช่น 123/45 ถนนราชดำเนิน แขวงพระบรมมหาราชวัง เขตพระนคร กรุงเทพฯ"
+                        rows="3"
+                        style={{ resize: 'vertical', fontFamily: 'inherit' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '0' }} />
+
+                {/* Default Rates */}
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', color: 'var(--text-primary)' }}>
+                    <span style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center' }}><MdSettings size={20} /></span>
+                    อัตราค่าสาธารณูปโภคเริ่มต้น <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '4px' }}>(สำหรับสร้างห้องพักใหม่)</span>
+                  </h3>
+
+                  <div className="form-grid-2">
+                    <div className="form-group">
+                      <label className="form-label">ค่าน้ำเริ่มต้น (บาท/หน่วย) *</label>
+                      <div style={{ position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#3b82f6' }}>
+                          <MdWaterDrop size={18} />
+                        </span>
+                        <input 
+                          type="number" 
+                          className="form-input" 
+                          name="defaultWaterRate" 
+                          value={settings.defaultWaterRate}
+                          onChange={handleInputChange}
+                          min="0"
+                          required
+                          style={{ paddingLeft: '38px' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">ค่าไฟเริ่มต้น (บาท/หน่วย) *</label>
+                      <div style={{ position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#eab308' }}>
+                          <MdFlashOn size={18} />
+                        </span>
+                        <input 
+                          type="number" 
+                          className="form-input" 
+                          name="defaultElectricityRate" 
+                          value={settings.defaultElectricityRate}
+                          onChange={handleInputChange}
+                          min="0"
+                          required
                           style={{ paddingLeft: '38px' }}
                         />
                       </div>
                     </div>
                   </div>
-
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label className="form-label">ที่อยู่หอพัก</label>
-                    <textarea 
-                      className="form-input" 
-                      name="address" 
-                      value={settings.address}
-                      onChange={handleInputChange}
-                      placeholder="เช่น 123/45 ถนนราชดำเนิน แขวงพระบรมมหาราชวัง เขตพระนคร กรุงเทพฯ"
-                      rows="3"
-                      style={{ resize: 'vertical', fontFamily: 'inherit' }}
-                    />
-                  </div>
                 </div>
-              </div>
 
-              <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '0' }} />
-
-              {/* Default Rates */}
-              <div>
-                <h3 style={{ fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: 'var(--accent-primary)' }}>
-                  <MdSettings size={20} /> อัตราค่าสาธารณูปโภคเริ่มต้น (สำหรับสร้างห้องพักใหม่)
-                </h3>
-
-                <div className="form-grid-2">
-                  <div className="form-group">
-                    <label className="form-label">ค่าน้ำเริ่มต้น (บาท/หน่วย) *</label>
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#3b82f6' }}>
-                        <MdWaterDrop size={18} />
-                      </span>
-                      <input 
-                        type="number" 
-                        className="form-input" 
-                        name="defaultWaterRate" 
-                        value={settings.defaultWaterRate}
-                        onChange={handleInputChange}
-                        min="0"
-                        required
-                        style={{ paddingLeft: '38px' }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">ค่าไฟเริ่มต้น (บาท/หน่วย) *</label>
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#eab308' }}>
-                        <MdFlashOn size={18} />
-                      </span>
-                      <input 
-                        type="number" 
-                        className="form-input" 
-                        name="defaultElectricityRate" 
-                        value={settings.defaultElectricityRate}
-                        onChange={handleInputChange}
-                        min="0"
-                        required
-                        style={{ paddingLeft: '38px' }}
-                      />
-                    </div>
-                  </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary" 
+                    disabled={saving}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px' }}
+                  >
+                    <MdSave size={20} />
+                    {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
+                  </button>
                 </div>
-              </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary" 
-                  disabled={saving}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px' }}
-                >
-                  <MdSave size={20} />
-                  {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
-                </button>
               </div>
-
             </div>
           </form>
         )
@@ -377,8 +401,9 @@ export default function SettingsPage() {
       {activeTab === 'admins' && (
           <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <h3 style={{ fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)' }}>
-                <MdPerson size={22} /> รายชื่อบัญชีผู้ดูแลระบบ (Admins)
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)', margin: 0 }}>
+                <span style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center' }}><MdPerson size={22} /></span>
+                รายชื่อบัญชีผู้ดูแลระบบ (Admins)
               </h3>
               <button className="btn btn-primary" onClick={handleOpenAddAdminModal} style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
                 <MdAdd size={18} /> เพิ่มบัญชีแอดมิน
@@ -406,10 +431,37 @@ export default function SettingsPage() {
                       {admins.length > 0 ? (
                         admins.map((admin) => (
                           <tr key={admin._id}>
-                            <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{admin.name}</td>
-                            <td style={{ whiteSpace: 'nowrap' }}>{admin.email}</td>
+                            <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '50%',
+                                  background: 'var(--accent-gradient)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontWeight: 700,
+                                  color: 'white',
+                                  fontSize: '0.8rem',
+                                  boxShadow: '0 0 6px rgba(99, 102, 241, 0.25)'
+                                }}>
+                                  {admin.name.charAt(0)}
+                                </div>
+                                <span>{admin.name}</span>
+                              </div>
+                            </td>
+                            <td style={{ whiteSpace: 'nowrap', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{admin.email}</td>
                             <td>
-                              <span className={`badge ${admin.isActive ? 'badge-success' : 'badge-danger'}`}>
+                              <span className={`badge ${admin.isActive ? 'badge-success' : 'badge-danger'}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ 
+                                  width: '6px', 
+                                  height: '6px', 
+                                  borderRadius: '50%', 
+                                  background: admin.isActive ? 'var(--color-success)' : 'var(--color-danger)',
+                                  boxShadow: admin.isActive ? '0 0 8px var(--color-success)' : 'none',
+                                  display: 'inline-block'
+                                }}></span>
                                 {admin.isActive ? 'ใช้งานปกติ' : 'ระงับการใช้งาน'}
                               </span>
                             </td>
