@@ -590,7 +590,7 @@ export default function SettingsPage() {
                       name="name" 
                       value={adminFormData.name}
                       onChange={handleAdminInputChange}
-                      placeholder="เช่น เจษฎา มาตเรียง" 
+                      placeholder="เช่น สมชาย ใจดี" 
                       required
                       style={{ paddingLeft: '38px' }}
                     />
@@ -609,7 +609,7 @@ export default function SettingsPage() {
                       name="email" 
                       value={adminFormData.email}
                       onChange={handleAdminInputChange}
-                      placeholder="เช่น jed667788@gmail.com" 
+                      placeholder="เช่น admin@staybill.com" 
                       required
                       style={{ paddingLeft: '38px' }}
                     />
