@@ -221,23 +221,21 @@ export default function SettingsPage() {
     <div style={{ width: '100%' }}>
       <div className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>ตั้งค่าระบบ</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>ตั้งค่าข้อมูลหอพัก อัตราค่าบริการ และจัดการบัญชีสิทธิ์การเข้าใช้งานระบบ</p>
+          <h2 className="page-title">ตั้งค่าระบบ</h2>
+          <p className="page-subtitle">ตั้งค่าข้อมูลหอพัก อัตราค่าบริการ และจัดการบัญชีสิทธิ์การเข้าใช้งานระบบ</p>
         </div>
       </div>
 
       {/* Borderless Horizontal Tab Navigation */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '24px', paddingBottom: '2px', gap: '24px' }}>
+      <div className="settings-tabs">
         <button 
           onClick={() => setActiveTab('general')}
+          className={`settings-tab-btn ${activeTab === 'general' ? 'settings-tab-btn-active' : ''}`}
           style={{
             background: 'none',
             border: 'none',
             borderBottom: activeTab === 'general' ? '2px solid var(--accent-primary)' : '2px solid transparent',
             color: activeTab === 'general' ? 'var(--text-primary)' : 'var(--text-secondary)',
-            padding: '12px 4px',
-            fontSize: '0.95rem',
-            fontWeight: 600,
             cursor: 'pointer',
             transition: 'var(--transition-fast)',
             marginBottom: '-3px'
@@ -247,14 +245,12 @@ export default function SettingsPage() {
         </button>
         <button 
           onClick={() => setActiveTab('admins')}
+          className={`settings-tab-btn ${activeTab === 'admins' ? 'settings-tab-btn-active' : ''}`}
           style={{
             background: 'none',
             border: 'none',
             borderBottom: activeTab === 'admins' ? '2px solid var(--accent-primary)' : '2px solid transparent',
             color: activeTab === 'admins' ? 'var(--text-primary)' : 'var(--text-secondary)',
-            padding: '12px 4px',
-            fontSize: '0.95rem',
-            fontWeight: 600,
             cursor: 'pointer',
             transition: 'var(--transition-fast)',
             marginBottom: '-3px'
@@ -564,19 +560,21 @@ export default function SettingsPage() {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '500px' }}>
             <div className="modal-header">
-              <h3 style={{ fontSize: '1.25rem' }}>
+              <h3 className="modal-title">
                 {editingAdmin ? `แก้ไขบัญชีผู้ใช้: ${editingAdmin.name}` : 'เพิ่มบัญชีผู้ดูแลระบบใหม่'}
               </h3>
               <button 
-                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }} 
+                type="button"
+                className="modal-close-btn"
                 onClick={() => setIsAdminModalOpen(false)}
+                aria-label="ปิด"
               >
                 <MdClose size={24} />
               </button>
             </div>
             
-            <form onSubmit={handleAdminSubmit}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleAdminSubmit} className="modal-form">
+              <div className="modal-body modal-body-form">
                 
                 <div className="form-group">
                   <label className="form-label">ชื่อผู้แสดงตัวตน *</label>

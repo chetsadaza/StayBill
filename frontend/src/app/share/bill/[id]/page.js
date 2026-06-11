@@ -136,11 +136,10 @@ export default function ShareBillPage() {
   const subtotal = bill.monthlyRent + (bill.waterTotal || 0) + (bill.electricityTotal || 0) + additionalChargesTotal;
 
   return (
-    <div style={styles.container}>
-      {/* Top sticky action header */}
-      <div style={styles.actionHeader}>
-        <h3 style={styles.actionTitle}>ใบแจ้งหนี้ค่าเช่าห้อง {bill.room?.roomNumber}</h3>
-        <div style={styles.actionButtons}>
+    <div className="share-bill-page">
+      <div className="share-bill-action-header">
+        <h3 className="share-bill-action-title">ใบแจ้งหนี้ค่าเช่าห้อง {bill.room?.roomNumber}</h3>
+        <div className="share-bill-toolbar">
           <button className="btn btn-secondary" onClick={generateImage} style={styles.btnAction}>
             <MdImage size={18} /> โหลดรูปภาพ (PNG)
           </button>
@@ -150,8 +149,7 @@ export default function ShareBillPage() {
         </div>
       </div>
 
-      {/* Main A4 Printable Paper */}
-      <div style={styles.paperWrapper}>
+      <div className="share-bill-paper-wrapper">
         <div 
           ref={printRef}
           className="invoice-paper"

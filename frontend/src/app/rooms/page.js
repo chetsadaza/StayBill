@@ -64,6 +64,13 @@ export default function RoomsPage() {
     fetchRooms();
   }, [statusFilter]);
 
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [isModalOpen]);
+
   const handleOpenAddModal = () => {
     setEditingRoom(null);
     setFormData({
@@ -148,8 +155,8 @@ export default function RoomsPage() {
       {/* Header section */}
       <div className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>จัดการห้องพัก</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>เพิ่ม แก้ไขข้อมูลห้องพัก และระบุอัตราค่าน้ำ/ค่าไฟรายห้อง</p>
+          <h2 className="page-title">จัดการห้องพัก</h2>
+          <p className="page-subtitle">เพิ่ม แก้ไขข้อมูลห้องพัก และระบุอัตราค่าน้ำ/ค่าไฟรายห้อง</p>
         </div>
         <button className="btn btn-primary" onClick={handleOpenAddModal}>
           <MdAdd size={20} /> เพิ่มห้องพัก
@@ -289,17 +296,17 @@ export default function RoomsPage() {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3 style={{ fontSize: '1.25rem' }}>{editingRoom ? `แก้ไขข้อมูลห้อง ${formData.roomNumber}` : 'เพิ่มห้องพักใหม่'}</h3>
-              <button style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }} onClick={() => setIsModalOpen(false)}>
+              <h3 className="modal-title">{editingRoom ? `แก้ไขข้อมูลห้อง ${formData.roomNumber}` : 'เพิ่มห้องพักใหม่'}</h3>
+              <button type="button" className="modal-close-btn" onClick={() => setIsModalOpen(false)} aria-label="ปิด">
                 <MdClose size={24} />
               </button>
             </div>
             
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleSubmit} className="modal-form">
+              <div className="modal-body modal-body-form">
                 
                 <div className="form-grid-2">
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">เลขห้อง *</label>
                     <input 
                       type="text" 
@@ -311,7 +318,7 @@ export default function RoomsPage() {
                       required
                     />
                   </div>
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">ชั้น *</label>
                     <input 
                       type="number" 
@@ -326,7 +333,7 @@ export default function RoomsPage() {
                 </div>
 
                 <div className="form-grid-2">
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">ประเภทห้องพัก</label>
                     <select 
                       className="form-input" 
@@ -339,7 +346,7 @@ export default function RoomsPage() {
                       ))}
                     </select>
                   </div>
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">ค่าเช่ารายเดือน (บาท) *</label>
                     <input 
                       type="number" 
@@ -353,7 +360,7 @@ export default function RoomsPage() {
                   </div>
                 </div>
 
-                <div className="form-group">
+                <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">สถานะห้องพัก</label>
                   <CustomSelect
                     name="status"
@@ -379,13 +386,12 @@ export default function RoomsPage() {
                     disabled={editingRoom?.status === 'occupied'}
                   />
                   {editingRoom?.status === 'occupied' && (
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>* ห้องนี้กำลังมีผู้เช่าอยู่ ไม่สามารถเปลี่ยนสถานะตรงๆ ได้</span>
+                    <span className="form-hint">* ห้องนี้กำลังมีผู้เช่าอยู่ ไม่สามารถเปลี่ยนสถานะตรงๆ ได้</span>
                   )}
                 </div>
 
-                {/* Water Config */}
-                <fieldset style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <legend style={{ padding: '0 8px', fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: 600 }}>ตั้งค่าการคำนวณค่าน้ำ</legend>
+                <fieldset className="form-section">
+                  <legend>ตั้งค่าการคำนวณค่าน้ำ</legend>
                   
                   <div className="form-grid-2">
                     <div className="form-group" style={{ marginBottom: 0 }}>
@@ -420,9 +426,8 @@ export default function RoomsPage() {
                   </div>
                 </fieldset>
 
-                {/* Electricity Config */}
-                <fieldset style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <legend style={{ padding: '0 8px', fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: 600 }}>ตั้งค่าการคำนวณค่าไฟ</legend>
+                <fieldset className="form-section">
+                  <legend>ตั้งค่าการคำนวณค่าไฟ</legend>
                   
                   <div className="form-grid-2">
                     <div className="form-group" style={{ marginBottom: 0 }}>

@@ -194,8 +194,8 @@ export default function Dashboard() {
         {/* Title */}
         <div className="dashboard-header-container" style={{ position: 'relative' }}>
           <div>
-            <h2 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>ภาพรวมระบบจัดการหอพัก</h2>
-            <p style={{ color: 'var(--hero-text-secondary, var(--text-secondary))' }}>สรุปข้อมูล สถิติ และบิลค่าเช่าล่าสุด</p>
+            <h2 className="page-title">ภาพรวมระบบจัดการหอพัก</h2>
+            <p className="page-subtitle">สรุปข้อมูล สถิติ และบิลค่าเช่าล่าสุด</p>
           </div>
           <img 
             src="/images/1.png" 
@@ -245,16 +245,16 @@ export default function Dashboard() {
       <div className="charts-grid">
         {/* Revenue Chart */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', minWidth: 0 }}>
-          <h3 style={{ fontSize: '1.15rem' }}>รายงานรายรับรายเดือน ปี {new Date().getFullYear() + 543}</h3>
-          <div style={{ height: '300px', position: 'relative', width: '100%' }}>
+          <h3 className="section-title">รายงานรายรับรายเดือน ปี {new Date().getFullYear() + 543}</h3>
+          <div className="chart-box">
             <Bar data={barChartData} options={chartOptions} />
           </div>
         </div>
 
         {/* Room Doughnut */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', minWidth: 0 }}>
-          <h3 style={{ fontSize: '1.15rem' }}>อัตราการเข้าพัก</h3>
-          <div style={{ height: '240px', position: 'relative', display: 'flex', justifyContent: 'center', width: '100%' }}>
+          <h3 className="section-title">อัตราการเข้าพัก</h3>
+          <div className="chart-box-sm">
             <Doughnut data={donutChartData} options={doughnutOptions} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '8px 16px', fontSize: '0.85rem' }}>
@@ -268,7 +268,7 @@ export default function Dashboard() {
       {/* Unpaid Bills List */}
       <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <h3 style={{ fontSize: '1.15rem' }}>รายการค้างชำระด่วนล่าสุด</h3>
+          <h3 className="section-title">รายการค้างชำระด่วนล่าสุด</h3>
           <Link href="/billing" className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
             ดูข้อมูลบิลทั้งหมด
           </Link>

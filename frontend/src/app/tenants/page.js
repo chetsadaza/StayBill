@@ -75,6 +75,13 @@ export default function TenantsPage() {
   }, [activeFilter]);
 
   useEffect(() => {
+    if (!isModalOpen && !lineModal.show) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [isModalOpen, lineModal.show]);
+
+  useEffect(() => {
     if (isModalOpen) {
       fetchAvailableRooms();
     }
@@ -201,8 +208,8 @@ export default function TenantsPage() {
       {/* Header section */}
       <div className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>จัดการผู้เช่า</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>ลงทะเบียนผู้เช่าใหม่ แก้ไขข้อมูลสัญญา และทำรายการย้ายออก</p>
+          <h2 className="page-title">จัดการผู้เช่า</h2>
+          <p className="page-subtitle">ลงทะเบียนผู้เช่าใหม่ แก้ไขข้อมูลสัญญา และทำรายการย้ายออก</p>
         </div>
         <button className="btn btn-primary" onClick={handleOpenAddModal}>
           <MdAdd size={20} /> เพิ่มผู้เช่าใหม่
@@ -459,17 +466,17 @@ export default function TenantsPage() {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3 style={{ fontSize: '1.25rem' }}>{editingTenant ? 'แก้ไขข้อมูลผู้เช่า' : 'ลงทะเบียนผู้เช่าใหม่'}</h3>
-              <button style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }} onClick={() => setIsModalOpen(false)}>
+              <h3 className="modal-title">{editingTenant ? 'แก้ไขข้อมูลผู้เช่า' : 'ลงทะเบียนผู้เช่าใหม่'}</h3>
+              <button type="button" className="modal-close-btn" onClick={() => setIsModalOpen(false)} aria-label="ปิด">
                 <MdClose size={24} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleSubmit} className="modal-form">
+              <div className="modal-body modal-body-form">
                 
                 <div className="form-grid-2">
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">ชื่อจริง *</label>
                     <input 
                       type="text" 
@@ -481,7 +488,7 @@ export default function TenantsPage() {
                       required
                     />
                   </div>
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">นามสกุล *</label>
                     <input 
                       type="text" 
@@ -496,7 +503,7 @@ export default function TenantsPage() {
                 </div>
 
                 <div className="form-grid-2">
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">เบอร์โทรศัพท์ *</label>
                     <input 
                       type="text" 
@@ -508,7 +515,7 @@ export default function TenantsPage() {
                       required
                     />
                   </div>
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">เลขประจำตัวประชาชน</label>
                     <input 
                       type="text" 
@@ -521,31 +528,31 @@ export default function TenantsPage() {
                   </div>
                 </div>
 
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">เลือกห้องที่จะเข้าพัก</label>
+                  <select 
+                    className="form-input" 
+                    name="room" 
+                    value={formData.room}
+                    onChange={handleInputChange}
+                    disabled={editingTenant && !formData.isActive}
+                  >
+                    <option value="">-- ไม่ระบุห้อง / พักภายนอก --</option>
+                    {editingTenant && editingTenant.room && (
+                      <option value={editingTenant.room._id}>
+                        ห้อง {editingTenant.room.roomNumber} (ห้องเดิมที่เข้าพัก)
+                      </option>
+                    )}
+                    {availableRooms.map((room) => (
+                      <option key={room._id} value={room._id}>
+                        ห้อง {room.roomNumber} (ว่าง - {room.floor}F)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="form-grid-2">
-                  <div className="form-group">
-                    <label className="form-label">เลือกห้องที่จะเข้าพัก</label>
-                    <select 
-                      className="form-input" 
-                      name="room" 
-                      value={formData.room}
-                      onChange={handleInputChange}
-                      disabled={editingTenant && !formData.isActive} // disable if historic tenant
-                    >
-                      <option value="">-- ไม่ระบุห้อง / พักภายนอก --</option>
-                      {/* Show current tenant room first in list when editing */}
-                      {editingTenant && editingTenant.room && (
-                        <option value={editingTenant.room._id}>
-                          ห้อง {editingTenant.room.roomNumber} (ห้องเดิมที่เข้าพัก)
-                        </option>
-                      )}
-                      {availableRooms.map((room) => (
-                        <option key={room._id} value={room._id}>
-                          ห้อง {room.roomNumber} (ว่าง - {room.floor}F)
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
+                  <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">วันที่ย้ายเข้าสัญญาเช่า</label>
                     <input 
                       type="date" 
@@ -555,29 +562,30 @@ export default function TenantsPage() {
                       onChange={handleInputChange}
                     />
                   </div>
+                  {editingTenant ? (
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">สถานะสัญญา</label>
+                      <select 
+                        className="form-input" 
+                        name="isActive" 
+                        value={formData.isActive}
+                        onChange={(e) => {
+                          const active = e.target.value === 'true';
+                          setFormData(prev => ({
+                            ...prev,
+                            isActive: active,
+                            room: active ? prev.room : ''
+                          }));
+                        }}
+                      >
+                        <option value="true">เช่าปกติ</option>
+                        <option value="false">สิ้นสุดการเช่า (ย้ายออก)</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div />
+                  )}
                 </div>
-
-                {editingTenant && (
-                  <div className="form-group">
-                    <label className="form-label">สถานะสัญญา</label>
-                    <select 
-                      className="form-input" 
-                      name="isActive" 
-                      value={formData.isActive}
-                      onChange={(e) => {
-                        const active = e.target.value === 'true';
-                        setFormData(prev => ({
-                          ...prev,
-                          isActive: active,
-                          room: active ? prev.room : '' // clear room if user manually selects inactive
-                        }));
-                      }}
-                    >
-                      <option value="true">เช่าปกติ</option>
-                      <option value="false">สิ้นสุดการเช่า (ย้ายออก)</option>
-                    </select>
-                  </div>
-                )}
 
               </div>
 

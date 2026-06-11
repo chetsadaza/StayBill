@@ -107,6 +107,7 @@ export default function RootLayout({ children }) {
     return (
       <html lang="th" data-theme={theme}>
         <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
           <title>StayBill — ใบแจ้งหนี้ค่าเช่า</title>
           <meta name="description" content="ดูรายละเอียดใบแจ้งหนี้ค่าเช่าหอพักของคุณ" />
           <link rel="icon" href="/favicon.ico" />
@@ -125,6 +126,7 @@ export default function RootLayout({ children }) {
     return (
       <html lang="th" data-theme={theme}>
         <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
           <title>StayBill — เข้าสู่ระบบ</title>
           <meta name="description" content="เข้าสู่ระบบจัดการหอพักอัจฉริยะ StayBill" />
           <link rel="icon" href="/favicon.ico" />
@@ -141,6 +143,7 @@ export default function RootLayout({ children }) {
     return (
       <html lang="th" data-theme={theme}>
         <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
           <title>StayBill — ระบบจัดการหอพักอัจฉริยะ</title>
           <meta name="description" content="ระบบจัดการหอพักอัจฉริยะ จัดการผู้เช่า ห้องพัก คำนวณบิลรายเดือน และสถิติครบวงจร" />
           <link rel="icon" href="/favicon.ico" />
@@ -168,6 +171,7 @@ export default function RootLayout({ children }) {
     return (
       <html lang="th" data-theme={theme}>
         <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
           <title>StayBill — ระบบจัดการหอพักอัจฉริยะ</title>
           <link rel="icon" href="/favicon.ico" />
         </head>
@@ -192,6 +196,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="th" data-theme={theme}>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <title>StayBill — ระบบจัดการหอพักอัจฉริยะ</title>
         <meta name="description" content="ระบบจัดการหอพักอัจฉริยะ จัดการผู้เช่า ห้องพัก คำนวณบิลรายเดือน และสถิติครบวงจร" />
         <link rel="icon" href="/favicon.ico" />
@@ -207,7 +212,7 @@ export default function RootLayout({ children }) {
             />
           )}
           
-          <div className="main-content-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <div className="main-content-wrapper">
             <Header 
               dormitoryName={dormitoryName} 
               toggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
@@ -217,8 +222,7 @@ export default function RootLayout({ children }) {
               onLogout={handleLogout}
             />
             
-            {/* Margins/Padding to account for fixed Header & Sidebar */}
-            <main className="main-content" style={{ marginTop: 'var(--header-height)' }}>
+            <main className="main-content">
               {children}
             </main>
           </div>

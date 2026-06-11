@@ -172,8 +172,8 @@ export default function ReportsPage() {
       {/* Title */}
       <div className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>รายงานและวิเคราะห์รายรับ</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>สรุปสัดส่วนรายรับรายปี แยกประเภทรายได้ และออกรายงานข้อมูลรายรับ</p>
+          <h2 className="page-title">รายงานและวิเคราะห์รายรับ</h2>
+          <p className="page-subtitle">สรุปสัดส่วนรายรับรายปี แยกประเภทรายได้ และออกรายงานข้อมูลรายรับ</p>
         </div>
         <button className="btn btn-secondary" onClick={handleExportCSV} disabled={!reportData}>
           <MdFileDownload size={20} /> ส่งออกรายงาน (CSV)
@@ -187,7 +187,7 @@ export default function ReportsPage() {
         </span>
         
         {/* Custom Year Dropdown */}
-        <div ref={dropdownRef} style={{ position: 'relative', width: '150px' }}>
+        <div ref={dropdownRef} className="filter-control" style={{ position: 'relative' }}>
           <button 
             type="button"
             onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -288,14 +288,14 @@ export default function ReportsPage() {
       {/* Summary card */}
       <div className="glass-card" style={{ background: 'var(--accent-gradient)', border: 'none', color: '#ffffff' }}>
         <span style={{ fontSize: '0.95rem', opacity: 0.85 }}>ยอดรายรับสุทธิสะสมประจำปี {selectedYear + 543}</span>
-        <h3 style={{ fontSize: '2.5rem', fontWeight: 800, marginTop: '8px' }}>{formatTHB(reportData?.totalYearRevenue)}</h3>
+        <h3 className="revenue-highlight-value">{formatTHB(reportData?.totalYearRevenue)}</h3>
         <p style={{ fontSize: '0.8rem', opacity: 0.75, marginTop: '4px' }}>* อ้างอิงจากข้อมูลบิลค่าเช่าที่ได้รับการบันทึกว่า "ชำระเงินเรียบร้อยแล้ว"</p>
       </div>
 
       {/* Stacked Chart */}
       <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <h3 style={{ fontSize: '1.15rem' }}>วิเคราะห์รายได้ในแต่ละเดือน</h3>
-        <div style={{ height: '350px', position: 'relative' }}>
+        <h3 className="section-title">วิเคราะห์รายได้ในแต่ละเดือน</h3>
+        <div className="chart-box">
           <Bar data={chartData} options={chartOptions} />
         </div>
       </div>

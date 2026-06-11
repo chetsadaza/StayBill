@@ -58,25 +58,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="login-bg-container" style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'relative',
-      overflow: 'hidden',
-      padding: '20px'
-    }}>
-
-
-      {/* Theme Toggle - Top Right */}
+    <div className="login-page login-bg-container">
       <button
         onClick={toggleTheme}
         aria-label="สลับธีม"
+        className="login-theme-toggle"
         style={{
-          position: 'absolute',
-          top: '24px',
-          right: '24px',
           background: 'var(--bg-card)',
           border: '1px solid var(--border-color)',
           borderRadius: '12px',
@@ -88,32 +75,21 @@ export default function LoginPage() {
           justifyContent: 'center',
           transition: 'var(--transition-fast)',
           backdropFilter: 'blur(12px)',
-          zIndex: 10
         }}
       >
         {theme === 'dark' ? <MdLightMode size={20} /> : <MdDarkMode size={20} />}
       </button>
 
-      {/* Login Card */}
-      <div style={{
-        width: '100%',
-        maxWidth: '440px',
-        background: 'var(--bg-card)',
+      <div className="login-card glass-card" style={{
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
         borderRadius: '24px',
-        border: '1px solid var(--border-color)',
-        boxShadow: 'var(--glass-shadow)',
-        padding: '48px 40px',
         position: 'relative',
         zIndex: 1,
         animation: 'loginFadeIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards'
       }}>
-        {/* Logo & Branding */}
-        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(24px, 5vw, 36px)' }}>
+          <div className="login-logo" style={{
             borderRadius: '18px',
             background: 'var(--accent-gradient)',
             display: 'flex',
@@ -121,7 +97,6 @@ export default function LoginPage() {
             justifyContent: 'center',
             margin: '0 auto 20px',
             boxShadow: 'var(--accent-glow)',
-            fontSize: '1.6rem',
             fontWeight: 800,
             color: 'white',
             fontFamily: 'var(--font-heading)',
@@ -129,8 +104,7 @@ export default function LoginPage() {
           }}>
             SB
           </div>
-          <h1 style={{
-            fontSize: '1.75rem',
+          <h1 className="login-title" style={{
             fontWeight: 700,
             fontFamily: 'var(--font-heading)',
             color: 'var(--text-primary)',

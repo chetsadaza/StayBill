@@ -394,8 +394,8 @@ export default function BillingPage() {
       {/* Title */}
       <div className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.75rem', marginBottom: '8px' }}>คำนวณบิลค่าเช่าและพิมพ์ใบแจ้งหนี้</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>สร้างใบแจ้งหนี้รายเดือนอัตโนมัติ บันทึกจ่ายเงิน และพิมพ์ใบแจ้งหนี้ PDF</p>
+          <h2 className="page-title">คำนวณบิลค่าเช่าและพิมพ์ใบแจ้งหนี้</h2>
+          <p className="page-subtitle">สร้างใบแจ้งหนี้รายเดือนอัตโนมัติ บันทึกจ่ายเงิน และพิมพ์ใบแจ้งหนี้ PDF</p>
         </div>
         <button className="btn btn-primary" onClick={handleOpenGenModal}>
           <MdAutoAwesome size={20} /> คำนวณบิลประจำเดือน
@@ -407,8 +407,8 @@ export default function BillingPage() {
         <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>เลือกเดือนเรียกเก็บเงิน:</span>
         <input 
           type="month" 
-          className="form-input" 
-          style={{ width: '220px', padding: '8px 12px' }}
+          className="form-input filter-control" 
+          style={{ padding: '8px 12px' }}
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
         />
@@ -581,16 +581,16 @@ export default function BillingPage() {
       {/* Modal Auto-Calculate / Input Meter Readings */}
       {isGenModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '800px' }}>
+          <div className="modal-content modal-content--wide">
             <div className="modal-header">
-              <h3 style={{ fontSize: '1.25rem' }}>คำนวณบิลสำหรับเดือน {formatBillingMonth(selectedMonth)}</h3>
-              <button style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }} onClick={() => setIsGenModalOpen(false)}>
+              <h3 className="modal-title">คำนวณบิลสำหรับเดือน {formatBillingMonth(selectedMonth)}</h3>
+              <button type="button" className="modal-close-btn" onClick={() => setIsGenModalOpen(false)} aria-label="ปิด">
                 <MdClose size={24} />
               </button>
             </div>
 
-            <form onSubmit={handleGenerateSubmit}>
-              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleGenerateSubmit} className="modal-form">
+              <div className="modal-body modal-body-form">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0, flex: 1 }}>
                     กรุณากรอกเลขมิเตอร์น้ำและไฟเดือนปัจจุบันสำหรับห้องที่คิดค่าบริการตามหน่วยใช้งาน:
