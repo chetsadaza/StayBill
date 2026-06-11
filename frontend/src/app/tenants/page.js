@@ -591,6 +591,17 @@ export default function TenantsPage() {
                 <div className="modal-illustration-container">
                   <div className="illustration-sun" />
                   <div className="illustration-moon" />
+                  {/* Twinkling Stars for Dark Mode */}
+                  <div className="star star-1" />
+                  <div className="star star-2" />
+                  <div className="star star-3" />
+                  <div className="star star-4" />
+                  <div className="star star-5" />
+                  <div className="star star-6" />
+                  <div className="star star-7" />
+                  <div className="star star-8" />
+                  <div className="star star-9" />
+                  <div className="star star-10" />
                   <div className="illustration-cloud cloud-1" />
                   <div className="illustration-cloud cloud-2" />
                   <div className="illustration-panda-wrapper">

@@ -68,6 +68,7 @@
   --hero-card-border: rgba(255, 255, 255, 0.08);
   --cloud-bg: rgba(167, 139, 250, 0.22);
   --panda-image: url('/images/8.1.png');
+  --rooms-panda-image: url('/images/9.1.png');
   --celestial-display-sun: none;
   --celestial-display-moon: block;
 }
@@ -118,6 +119,7 @@
   --modal-overlay-bg: rgba(0, 0, 0, 0.3);
   --cloud-bg: rgba(255, 255, 255, 0.9);
   --panda-image: url('/images/8.png');
+  --rooms-panda-image: url('/images/9.png');
   --celestial-display-sun: block;
   --celestial-display-moon: none;
 }
@@ -2066,6 +2068,20 @@ select.form-input option {
   animation: pandaPeekFilter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
+/* Adjust peeking pandas positioning on desktop (768px+) to prevent overlapping button text */
+@media (min-width: 768px) {
+  .filter-bar-panda {
+    top: calc(100% - 5px);
+  }
+  .filter-bar-panda-available,
+  .filter-bar-panda-occupied {
+    bottom: calc(100% - 2px);
+  }
+  .filter-bar-panda-maintenance {
+    bottom: calc(100% - 5px);
+  }
+}
+
 /* Toast Responsive Styles */
 .toast-responsive {
   position: fixed;
@@ -2270,6 +2286,8 @@ select.form-input option {
   .main-content {
     margin-left: var(--sidebar-width);
     padding-bottom: var(--content-padding-y);
+    width: auto;
+    max-width: none;
   }
 
   .desktop-only {
@@ -2771,8 +2789,125 @@ select.form-input option {
 /* Room Panda Balloon Image */
 .room-illustration-panda {
   width: 220px;
-  height: auto;
+  height: 220px;
+  background-image: var(--rooms-panda-image);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: bottom center;
   display: block;
+}
+
+/* Beautiful Twinkling Stars for Dark Mode (Not Cluttered) */
+.star {
+  position: absolute;
+  background: radial-gradient(circle, #ffffff 10%, rgba(255, 255, 255, 0.7) 60%, transparent 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+  animation: starTwinkle var(--star-duration, 3s) ease-in-out infinite;
+  display: var(--celestial-display-moon);
+  z-index: 1;
+}
+
+.star-1 {
+  top: 30px;
+  left: 15%;
+  width: 3px;
+  height: 3px;
+  animation-delay: 0.2s;
+  animation-duration: 2.5s;
+}
+
+.star-2 {
+  top: 75px;
+  left: 8%;
+  width: 2px;
+  height: 2px;
+  animation-delay: 0.8s;
+  animation-duration: 3.2s;
+}
+
+.star-3 {
+  top: 120px;
+  left: 22%;
+  width: 2px;
+  height: 2px;
+  animation-delay: 1.5s;
+  animation-duration: 2.8s;
+}
+
+.star-4 {
+  top: 40px;
+  left: 40%;
+  width: 3.5px;
+  height: 3.5px;
+  animation-delay: 0s;
+  animation-duration: 4s;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+}
+
+.star-5 {
+  top: 95px;
+  left: 52%;
+  width: 1.5px;
+  height: 1.5px;
+  animation-delay: 2.1s;
+  animation-duration: 3s;
+}
+
+.star-6 {
+  top: 35px;
+  left: 68%;
+  width: 2px;
+  height: 2px;
+  animation-delay: 0.5s;
+  animation-duration: 2.2s;
+}
+
+.star-7 {
+  top: 80px;
+  left: 82%;
+  width: 3px;
+  height: 3px;
+  animation-delay: 1.2s;
+  animation-duration: 3.5s;
+}
+
+.star-8 {
+  top: 130px;
+  left: 74%;
+  width: 2px;
+  height: 2px;
+  animation-delay: 1.9s;
+  animation-duration: 2.7s;
+}
+
+.star-9 {
+  top: 60px;
+  left: 90%;
+  width: 2px;
+  height: 2px;
+  animation-delay: 0.4s;
+  animation-duration: 3.8s;
+}
+
+.star-10 {
+  top: 110px;
+  left: 35%;
+  width: 1.5px;
+  height: 1.5px;
+  animation-delay: 1.1s;
+  animation-duration: 2.4s;
+}
+
+@keyframes starTwinkle {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
 
 /* Bird Keyframes */

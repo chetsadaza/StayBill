@@ -467,6 +467,17 @@ export default function RoomsPage() {
                   {/* Sun (light) / Moon (dark) */}
                   <div className="illustration-sun" />
                   <div className="illustration-moon" />
+                  {/* Twinkling Stars for Dark Mode */}
+                  <div className="star star-1" />
+                  <div className="star star-2" />
+                  <div className="star star-3" />
+                  <div className="star star-4" />
+                  <div className="star star-5" />
+                  <div className="star star-6" />
+                  <div className="star star-7" />
+                  <div className="star star-8" />
+                  <div className="star star-9" />
+                  <div className="star star-10" />
                   {/* Mountains */}
                   <div className="mountain mountain-back" />
                   <div className="mountain mountain-front" />
@@ -479,11 +490,7 @@ export default function RoomsPage() {
                   <div className="bird bird-3" />
                   {/* Panda */}
                   <div className="illustration-panda-wrapper">
-                    <img 
-                      src="/images/9.png" 
-                      alt="Panda with balloons" 
-                      className="room-illustration-panda" 
-                    />
+                    <div className="room-illustration-panda" />
                   </div>
                 </div>
 
