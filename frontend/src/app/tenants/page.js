@@ -587,6 +587,17 @@ export default function TenantsPage() {
                   )}
                 </div>
 
+                {/* Illustration Area with Panda, moving Sun/Moon, and Clouds */}
+                <div className="modal-illustration-container">
+                  <div className="illustration-sun" />
+                  <div className="illustration-moon" />
+                  <div className="illustration-cloud cloud-1" />
+                  <div className="illustration-cloud cloud-2" />
+                  <div className="illustration-panda-wrapper">
+                    <div className="illustration-panda-avatar" />
+                  </div>
+                </div>
+
               </div>
 
               <div className="modal-footer">

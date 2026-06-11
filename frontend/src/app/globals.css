@@ -66,6 +66,10 @@
   --hero-text-muted: #cbd5e1;
   --hero-card-bg: rgba(20, 22, 36, 0.7);
   --hero-card-border: rgba(255, 255, 255, 0.08);
+  --cloud-bg: rgba(167, 139, 250, 0.22);
+  --panda-image: url('/images/8.1.png');
+  --celestial-display-sun: none;
+  --celestial-display-moon: block;
 }
 
 /* ========== LIGHT THEME ========== */
@@ -112,6 +116,10 @@
   --sidebar-bg: rgba(255, 255, 255, 0.85);
   --header-bg: rgba(255, 255, 255, 0.88);
   --modal-overlay-bg: rgba(0, 0, 0, 0.3);
+  --cloud-bg: rgba(255, 255, 255, 0.9);
+  --panda-image: url('/images/8.png');
+  --celestial-display-sun: block;
+  --celestial-display-moon: none;
 }
 
 * {
@@ -2477,4 +2485,185 @@ select.form-input option {
     text-align: center;
   }
 }
+
+/* Modal Illustration Area */
+.modal-illustration-container {
+  position: relative;
+  width: 100%;
+  height: 350px;
+  margin-top: 15px;
+  background: none;
+  border: none;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* Glowing rotating/pulsing Sun */
+.illustration-sun {
+  position: absolute;
+  top: 25px;
+  right: 60px;
+  width: 75px;
+  height: 75px;
+  background: radial-gradient(circle, #fcd34d 0%, #f59e0b 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 30px #f59e0b, 0 0 60px rgba(245, 158, 11, 0.4);
+  animation: sunFloat 6s ease-in-out infinite alternate, sunPulse 4s ease-in-out infinite alternate;
+  display: var(--celestial-display-sun);
+}
+
+/* Glowing realistic Moon for Night Mode */
+.illustration-moon {
+  position: absolute;
+  top: 25px;
+  right: 60px;
+  width: 75px;
+  height: 75px;
+  background: radial-gradient(circle, #fefefe 0%, #e2e8f0 70%, #cbd5e1 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.4), 0 0 50px rgba(226, 232, 240, 0.2);
+  animation: sunFloat 6s ease-in-out infinite alternate, moonPulse 4s ease-in-out infinite alternate;
+  display: var(--celestial-display-moon);
+  overflow: hidden;
+}
+
+/* Moon Crater Detail */
+.illustration-moon::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  width: 16px;
+  height: 16px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  box-shadow: 25px 25px 0 rgba(0, 0, 0, 0.05), 10px 35px 0 rgba(0, 0, 0, 0.04);
+}
+
+/* Floating Clouds (Lilac tinted for luxury dark mode, white for light mode) */
+.illustration-cloud {
+  position: absolute;
+  background: var(--cloud-bg);
+  border-radius: 100px;
+  filter: blur(1px);
+}
+
+.illustration-cloud::before,
+.illustration-cloud::after {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+}
+
+.cloud-1 {
+  width: 130px;
+  height: 42px;
+  top: 45px;
+  left: -140px;
+  opacity: 0.85;
+  animation: floatCloudLeftToRight 28s linear infinite;
+}
+.cloud-1::before {
+  width: 58px;
+  height: 58px;
+  top: -28px;
+  left: 20px;
+}
+.cloud-1::after {
+  width: 44px;
+  height: 44px;
+  top: -18px;
+  right: 20px;
+}
+
+.cloud-2 {
+  width: 170px;
+  height: 52px;
+  top: 110px;
+  left: -180px;
+  opacity: 0.65;
+  animation: floatCloudLeftToRight 42s linear infinite;
+  animation-delay: 6s;
+}
+.cloud-2::before {
+  width: 72px;
+  height: 72px;
+  top: -36px;
+  left: 28px;
+}
+.cloud-2::after {
+  width: 52px;
+  height: 52px;
+  top: -22px;
+  right: 28px;
+}
+
+/* Panda Wrapper and Class-based Background Image */
+.illustration-panda-wrapper {
+  position: relative;
+  z-index: 10;
+  margin-bottom: -5px;
+  animation: pandaHover 4s ease-in-out infinite alternate;
+}
+
+.illustration-panda-avatar {
+  width: 280px;
+  height: 280px;
+  background-image: var(--panda-image);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  display: block;
+}
+
+/* Keyframes animations */
+@keyframes sunFloat {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes sunPulse {
+  0% {
+    box-shadow: 0 0 15px #f59e0b, 0 0 30px rgba(245, 158, 11, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 25px #f59e0b, 0 0 50px rgba(245, 158, 11, 0.5);
+  }
+}
+
+@keyframes floatCloudLeftToRight {
+  0% {
+    left: -100px;
+  }
+  100% {
+    left: calc(100% + 100px);
+  }
+}
+
+@keyframes pandaHover {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-10px) rotate(1.5deg);
+  }
+}
+
+@keyframes moonPulse {
+  0% {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3), 0 0 30px rgba(226, 232, 240, 0.15);
+  }
+  100% {
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.5), 0 0 50px rgba(226, 232, 240, 0.3);
+  }
+}
+
 
