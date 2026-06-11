@@ -462,6 +462,31 @@ export default function RoomsPage() {
                   </div>
                 </fieldset>
 
+                {/* Illustration Area with Panda, Sun/Moon, Mountains, Birds, and Clouds */}
+                <div className="room-illustration-container">
+                  {/* Sun (light) / Moon (dark) */}
+                  <div className="illustration-sun" />
+                  <div className="illustration-moon" />
+                  {/* Mountains */}
+                  <div className="mountain mountain-back" />
+                  <div className="mountain mountain-front" />
+                  {/* Clouds */}
+                  <div className="illustration-cloud cloud-1" />
+                  <div className="illustration-cloud cloud-2" />
+                  {/* Flying Birds */}
+                  <div className="bird bird-1" />
+                  <div className="bird bird-2" />
+                  <div className="bird bird-3" />
+                  {/* Panda */}
+                  <div className="illustration-panda-wrapper">
+                    <img 
+                      src="/images/9.png" 
+                      alt="Panda with balloons" 
+                      className="room-illustration-panda" 
+                    />
+                  </div>
+                </div>
+
               </div>
               
               <div className="modal-footer">
