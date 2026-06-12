@@ -5,7 +5,6 @@ import {
   MdDarkMode, 
   MdLightMode, 
   MdKeyboardArrowDown, 
-  MdPerson, 
   MdSettings, 
   MdExitToApp 
 } from 'react-icons/md';
@@ -129,10 +128,6 @@ export default function Header({ dormitoryName = 'หอพัก StayBill', tog
 
                 {/* Dropdown Menu List */}
                 <div className={styles.dropdownMenu}>
-                  <Link href="/settings" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
-                    <MdPerson size={20} className={styles.dropdownItemIcon} />
-                    <span>โปรไฟล์ของฉัน</span>
-                  </Link>
                   <Link href="/settings" className={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
                     <MdSettings size={20} className={styles.dropdownItemIcon} />
                     <span>ตั้งค่า</span>
