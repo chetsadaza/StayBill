@@ -4,7 +4,7 @@ const path = require('path');
 const Tenant = require('../models/Tenant');
 const Bill = require('../models/Bill');
 const SlipVerificationLog = require('../models/SlipVerificationLog');
-const { verifySlipWithSlipOk, parseSlipDate } = require('../utils/helpers');
+const { verifySlipWithSlipOk, parseSlipDate, matchMaskedAccount } = require('../utils/helpers');
 
 // Lock sets for slip concurrency control
 const processingUsers = new Set();
@@ -262,9 +262,8 @@ exports.handleWebhook = async (req, res) => {
               }
             }
             if (expectedReceiverAccount && actualReceiverAccount) {
-              const cleanActual = actualReceiverAccount.replace(/-/g, '');
-              const accounts = expectedReceiverAccount.split(',').map(a => a.trim().replace(/-/g, ''));
-              const accountMatch = accounts.some(acc => cleanActual.includes(acc) || acc.includes(cleanActual));
+              const accounts = expectedReceiverAccount.split(',').map(a => a.trim());
+              const accountMatch = accounts.some(acc => matchMaskedAccount(actualReceiverAccount, acc));
               if (!accountMatch) {
                 receiverValid = false;
                 invalidReason = `เลขบัญชี/PromptPay ปลายทางไม่ตรงกับหอพัก (โอนไปที่: ${actualReceiverAccount})`;

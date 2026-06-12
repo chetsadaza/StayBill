@@ -97,4 +97,38 @@ exports.parseSlipDate = (slipData) => {
   return null;
 };
 
+// Check if an actual (possibly masked) account number matches the expected account number (allowing wildcards 'x', 'X', '*', '_')
+exports.matchMaskedAccount = (actual, expected) => {
+  if (!actual || !expected) return false;
+
+  const cleanActual = actual.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const cleanExpected = expected.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+
+  // If they match exactly
+  if (cleanActual === cleanExpected) return true;
+
+  // If lengths are different, they cannot match under positional masking
+  if (cleanActual.length !== cleanExpected.length) return false;
+
+  // Compare position by position
+  for (let i = 0; i < cleanActual.length; i++) {
+    const actChar = cleanActual[i];
+    const expChar = cleanExpected[i];
+
+    const isActWildcard = actChar === 'x' || actChar === '*' || actChar === '_';
+    const isExpWildcard = expChar === 'x' || expChar === '*' || expChar === '_';
+
+    if (isActWildcard || isExpWildcard) {
+      continue;
+    }
+
+    if (actChar !== expChar) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+
 

@@ -3,7 +3,7 @@ const Room = require('../models/Room');
 const Tenant = require('../models/Tenant');
 const SlipVerificationLog = require('../models/SlipVerificationLog');
 const { calculateWater, calculateElectricity, calculateTotal } = require('../utils/billCalculator');
-const { getCurrentMonth, verifySlipWithSlipOk, parseSlipDate } = require('../utils/helpers');
+const { getCurrentMonth, verifySlipWithSlipOk, parseSlipDate, matchMaskedAccount } = require('../utils/helpers');
 const { sendPaymentNotification } = require('./lineController');
 const fs = require('fs');
 const path = require('path');
@@ -389,9 +389,8 @@ exports.verifySlip = async (req, res, next) => {
         }
       }
       if (expectedReceiverAccount && actualReceiverAccount) {
-        const cleanActual = actualReceiverAccount.replace(/-/g, '');
-        const accounts = expectedReceiverAccount.split(',').map(a => a.trim().replace(/-/g, ''));
-        const accountMatch = accounts.some(acc => cleanActual.includes(acc) || acc.includes(cleanActual));
+        const accounts = expectedReceiverAccount.split(',').map(a => a.trim());
+        const accountMatch = accounts.some(acc => matchMaskedAccount(actualReceiverAccount, acc));
         if (!accountMatch) {
           receiverValid = false;
           invalidReason = `เลขบัญชี/PromptPay ปลายทางไม่ตรงกับหอพัก (โอนไปที่: ${actualReceiverAccount})`;
