@@ -383,9 +383,18 @@ exports.handleWebhook = async (req, res) => {
 
         } catch (err) {
           console.error('Error processing LINE slip verification:', err);
+          try {
+            await SlipVerificationLog.create({
+              success: false,
+              errorMessage: `ระบบล้มเหลว (System Exception): ${err.message}\n${err.stack}`,
+              source: 'line'
+            });
+          } catch (logErr) {
+            console.error('Failed to write error log to DB:', logErr);
+          }
           await lineReply(event.replyToken, [{
             type: 'text',
-            text: '❌ เกิดข้อผิดพลาดในระบบตรวจสลิปชั่วคราว กรุณาส่งสลิปใหม่อีกครั้ง หรือติดต่อแอดมินโดยตรงค่ะ'
+            text: `❌ เกิดข้อผิดพลาดในระบบตรวจสลิปชั่วคราว: ${err.message}\n\nกรุณาติดต่อแอดมินหรือส่งสลิปใหม่อีกครั้งค่ะ`
           }]);
         } finally {
           processingUsers.delete(lineUserId);
