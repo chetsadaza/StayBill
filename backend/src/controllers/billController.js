@@ -380,14 +380,19 @@ exports.verifySlip = async (req, res, next) => {
       let receiverValid = true;
       let invalidReason = '';
 
-      if (expectedReceiverName && !actualReceiverName.includes(expectedReceiverName)) {
-        receiverValid = false;
-        invalidReason = `บัญชีผู้รับเงินปลายทางไม่ตรงกับหอพัก (โอนไปที่: ${actualReceiverName})`;
+      if (expectedReceiverName) {
+        const names = expectedReceiverName.split(',').map(n => n.trim());
+        const nameMatch = names.some(name => actualReceiverName.includes(name));
+        if (!nameMatch) {
+          receiverValid = false;
+          invalidReason = `บัญชีผู้รับเงินปลายทางไม่ตรงกับหอพัก (โอนไปที่: ${actualReceiverName})`;
+        }
       }
       if (expectedReceiverAccount && actualReceiverAccount) {
         const cleanActual = actualReceiverAccount.replace(/-/g, '');
-        const cleanExpected = expectedReceiverAccount.replace(/-/g, '');
-        if (!cleanActual.includes(cleanExpected)) {
+        const accounts = expectedReceiverAccount.split(',').map(a => a.trim().replace(/-/g, ''));
+        const accountMatch = accounts.some(acc => cleanActual.includes(acc) || acc.includes(cleanActual));
+        if (!accountMatch) {
           receiverValid = false;
           invalidReason = `เลขบัญชี/PromptPay ปลายทางไม่ตรงกับหอพัก (โอนไปที่: ${actualReceiverAccount})`;
         }
