@@ -98,53 +98,58 @@ exports.parseSlipDate = (slipData) => {
 };
 
 // Check if an actual (possibly masked) account number matches the expected account number
-// Supports wildcard/mask characters: x, X, *, _, •
-// Requires at least 3 real (unmasked) digit positions to overlap and match for security
+// Supports 3 matching modes:
+// 1. Exact match (case-insensitive)
+// 2. Positional wildcard matching for equal-length strings (x, X, *, _, •, ●)
+// 3. Substring/partial matching for short ENV values (e.g. "3177")
 exports.matchMaskedAccount = (actual, expected) => {
   if (!actual || !expected) return false;
 
-  // Remove only formatting chars (dashes, spaces) but KEEP mask chars like *, x, _, •
+  // Remove only formatting chars (dashes, spaces, dots) but KEEP mask chars
   const cleanActual = actual.replace(/[-\s.]/g, '');
   const cleanExpected = expected.replace(/[-\s.]/g, '');
 
-  // If they match exactly (case-insensitive)
+  // Mode 1: Exact match (case-insensitive)
   if (cleanActual.toLowerCase() === cleanExpected.toLowerCase()) return true;
 
-  // If lengths are different, they cannot match under positional masking
-  if (cleanActual.length !== cleanExpected.length) return false;
-
   const wildcardChars = new Set(['x', 'X', '*', '_', '•', '●']);
-  let matchedDigits = 0; // count of real digit positions that matched
 
-  // Compare position by position
-  for (let i = 0; i < cleanActual.length; i++) {
-    const actChar = cleanActual[i];
-    const expChar = cleanExpected[i];
+  // Mode 2: Positional wildcard matching (same length)
+  if (cleanActual.length === cleanExpected.length) {
+    let matchedDigits = 0;
+    let mismatch = false;
 
-    const isActWildcard = wildcardChars.has(actChar);
-    const isExpWildcard = wildcardChars.has(expChar);
+    for (let i = 0; i < cleanActual.length; i++) {
+      const actChar = cleanActual[i];
+      const expChar = cleanExpected[i];
 
-    if (isActWildcard && isExpWildcard) {
-      // Both masked — skip, no information
-      continue;
+      if (wildcardChars.has(actChar) || wildcardChars.has(expChar)) {
+        continue; // one or both masked — skip
+      }
+
+      if (actChar !== expChar) {
+        mismatch = true;
+        break;
+      }
+      matchedDigits++;
     }
 
-    if (isActWildcard || isExpWildcard) {
-      // One side is masked — skip, cannot compare
-      continue;
-    }
-
-    // Both sides have real characters — must match
-    if (actChar !== expChar) {
-      return false;
-    }
-
-    matchedDigits++;
+    if (!mismatch && matchedDigits >= 3) return true;
   }
 
-  // Require at least 3 real digit positions to overlap for security
-  // This prevents false positives when both sides mask different positions
-  return matchedDigits >= 3;
+  // Mode 3: Substring/partial matching (different lengths)
+  // Extract only real (non-masked) digits from each side
+  const actualDigits = [...cleanActual].filter(c => !wildcardChars.has(c)).join('');
+  const expectedDigits = [...cleanExpected].filter(c => !wildcardChars.has(c)).join('');
+
+  // Need at least 3 matching digits for security
+  if (actualDigits.length >= 3 && expectedDigits.length >= 3) {
+    if (actualDigits.includes(expectedDigits) || expectedDigits.includes(actualDigits)) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 
