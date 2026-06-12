@@ -17,7 +17,8 @@ import {
   MdAttachMoney,
   MdExpandMore,
   MdExpandLess,
-  MdSend
+  MdSend,
+  MdQrCodeScanner
 } from 'react-icons/md';
 
 import jsPDF from 'jspdf';
@@ -312,6 +313,33 @@ export default function BillingPage() {
     );
   };
 
+  const handleSlipUpload = async (billId, roomNumber, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('ขนาดไฟล์รูปภาพสลิปต้องไม่เกิน 5MB', 'warning');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64data = reader.result;
+      try {
+        showToast(`กำลังตรวจสอบสลิปสำหรับห้อง ${roomNumber}...`, 'info');
+        const res = await api.verifySlip(billId, { imageBase64: base64data });
+        if (res.success) {
+          showToast(`ตรวจสลิปสำเร็จ! ยอดเงิน ฿${res.data.amount.toLocaleString()} โอนเรียบร้อย ระบบปิดยอดค้างชำระแล้ว`, 'success');
+          fetchData();
+        }
+      } catch (err) {
+        showToast(err.message || 'การตรวจสอบสลิปขัดข้อง', 'error');
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   // Send bill to LINE
   const handleSendLine = async (bill, roomNumber) => {
     try {
@@ -471,13 +499,29 @@ export default function BillingPage() {
                         </button>
                         
                         {!bill.isPaid && (
-                          <button 
-                            className="btn btn-primary" 
-                            style={{ padding: '6px 12px', fontSize: '0.8rem', background: 'var(--color-success)' }}
-                            onClick={() => handlePayBill(bill._id, bill.room.roomNumber)}
-                          >
-                            <MdCheckCircle size={14} /> จ่ายแล้ว
-                          </button>
+                          <>
+                            <button 
+                              className="btn btn-primary" 
+                              style={{ padding: '6px 12px', fontSize: '0.8rem', background: 'var(--color-success)' }}
+                              onClick={() => handlePayBill(bill._id, bill.room.roomNumber)}
+                            >
+                              <MdCheckCircle size={14} /> จ่ายแล้ว
+                            </button>
+                            <button 
+                              className="btn btn-secondary" 
+                              style={{ padding: '6px 12px', fontSize: '0.8rem', borderColor: 'var(--color-success)', color: 'var(--color-success)', background: 'transparent' }}
+                              onClick={() => document.getElementById(`slip-upload-${bill._id}`).click()}
+                            >
+                              <MdQrCodeScanner size={14} /> ตรวจสลิป
+                            </button>
+                            <input 
+                              type="file" 
+                              id={`slip-upload-${bill._id}`} 
+                              accept="image/*"
+                              style={{ display: 'none' }}
+                              onChange={(e) => handleSlipUpload(bill._id, bill.room.roomNumber, e)}
+                            />
+                          </>
                         )}
 
                         {bill.tenant?.lineUserId && (
@@ -548,13 +592,29 @@ export default function BillingPage() {
                   </button>
                   
                   {!bill.isPaid && (
-                    <button 
-                      className="btn btn-primary" 
-                      style={{ background: 'var(--color-success)' }}
-                      onClick={() => handlePayBill(bill._id, bill.room.roomNumber)}
-                    >
-                      <MdCheckCircle size={14} /> จ่ายแล้ว
-                    </button>
+                    <>
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ background: 'var(--color-success)' }}
+                        onClick={() => handlePayBill(bill._id, bill.room.roomNumber)}
+                      >
+                        <MdCheckCircle size={14} /> จ่ายแล้ว
+                      </button>
+                      <button 
+                        className="btn btn-secondary" 
+                        style={{ borderColor: 'var(--color-success)', color: 'var(--color-success)', background: 'transparent' }}
+                        onClick={() => document.getElementById(`slip-upload-mobile-${bill._id}`).click()}
+                      >
+                        <MdQrCodeScanner size={14} /> ตรวจสลิป
+                      </button>
+                      <input 
+                        type="file" 
+                        id={`slip-upload-mobile-${bill._id}`} 
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => handleSlipUpload(bill._id, bill.room.roomNumber, e)}
+                      />
+                    </>
                   )}
 
                   {bill.tenant?.lineUserId && (

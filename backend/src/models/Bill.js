@@ -80,6 +80,15 @@ const billSchema = new mongoose.Schema({
     type: String,
     enum: ['pending', 'paid', 'overdue'],
     default: 'pending'
+  },
+  transRef: {
+    type: String,
+    default: null,
+    index: true
+  },
+  slipUrl: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true

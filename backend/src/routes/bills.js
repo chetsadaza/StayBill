@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getBills, getBill, generateBills, updateBill, payBill, deleteBill } = require('../controllers/billController');
+const { getBills, getBill, generateBills, updateBill, payBill, deleteBill, verifySlip } = require('../controllers/billController');
 const { validateBillGeneration } = require('../middleware/validation');
 
 router.route('/')
@@ -16,5 +16,8 @@ router.route('/:id')
 
 router.route('/:id/pay')
   .put(payBill);
+
+router.route('/:id/verify-slip')
+  .post(verifySlip);
 
 module.exports = router;

@@ -86,6 +86,7 @@ export const api = {
   generateBills: (data) => request('/bills/generate', { method: 'POST', body: data }),
   updateBill: (id, data) => request(`/bills/${id}`, { method: 'PUT', body: data }),
   payBill: (id) => request(`/bills/${id}/pay`, { method: 'PUT' }),
+  verifySlip: (id, data) => request(`/bills/${id}/verify-slip`, { method: 'POST', body: data }),
   deleteBill: (id) => request(`/bills/${id}`, { method: 'DELETE' }),
 
   // Reports

@@ -28,3 +28,34 @@ exports.getThaiMonth = (monthStr) => {
   const [year, month] = monthStr.split('-');
   return `${months[parseInt(month) - 1]} ${parseInt(year) + 543}`;
 };
+
+// Verify bank transfer slip via SlipOK API
+exports.verifySlipWithSlipOk = async (imageBuffer) => {
+  const branchId = process.env.SLIPOK_BRANCH_ID;
+  const apiKey = process.env.SLIPOK_API_KEY;
+
+  if (!branchId || !apiKey) {
+    throw new Error('ระบบตรวจสอบสลิปไม่ได้ระบุ SLIPOK_API_KEY หรือ SLIPOK_BRANCH_ID');
+  }
+
+  const formData = new FormData();
+  formData.append('files', new Blob([imageBuffer], { type: 'image/jpeg' }), 'slip.jpg');
+  formData.append('log', 'true');
+
+  const res = await fetch(`https://api.slipok.com/api/line/apikey/${branchId}`, {
+    method: 'POST',
+    headers: {
+      'x-authorization': apiKey
+    },
+    body: formData
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error('SlipOK API failed response:', errText);
+    throw new Error('ไม่สามารถเชื่อมต่อบริการตรวจสอบสลิปได้');
+  }
+
+  return res.json();
+};
+

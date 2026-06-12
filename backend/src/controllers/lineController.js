@@ -3,6 +3,12 @@ const fs = require('fs');
 const path = require('path');
 const Tenant = require('../models/Tenant');
 const Bill = require('../models/Bill');
+const SlipVerificationLog = require('../models/SlipVerificationLog');
+const { verifySlipWithSlipOk } = require('../utils/helpers');
+
+// Lock sets for slip concurrency control
+const processingUsers = new Set();
+const processingRefs = new Set();
 
 const LINE_CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET;
 const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
@@ -124,6 +130,265 @@ exports.handleWebhook = async (req, res) => {
               text: '🏠 ระบบแจ้งหนี้ StayBill\n\nกรุณาพิมพ์ «รหัสยืนยัน 6 หลัก» เพื่อเชื่อมบัญชีค่ะ\n\nหากยังไม่มีรหัส กรุณาติดต่อผู้ดูแลหอพัก'
             }]);
           }
+        }
+      } else if (event.type === 'message' && event.message.type === 'image') {
+        const lineUserId = event.source.userId;
+        const messageId = event.message.id;
+
+        // Concurrency lock: check if user is already verifying a slip
+        if (processingUsers.has(lineUserId)) {
+          await lineReply(event.replyToken, [{
+            type: 'text',
+            text: '⏳ ระบบกำลังตรวจสอบสลิปก่อนหน้านี้ของคุณ กรุณารอสักครู่ค่ะ'
+          }]);
+          continue;
+        }
+        processingUsers.add(lineUserId);
+
+        try {
+          // Check if tenant is linked
+          const tenant = await Tenant.findOne({ lineUserId }).populate('room');
+          if (!tenant) {
+            await lineReply(event.replyToken, [{
+              type: 'text',
+              text: '🏠 ระบบแจ้งหนี้ StayBill\n\nบัญชี LINE ของคุณยังไม่ได้ผูกกับห้องพัก กรุณาพิมพ์ «รหัสยืนยัน 6 หลัก» ที่ได้รับจากผู้ดูแลหอพักเพื่อเชื่อมต่อค่ะ'
+            }]);
+            continue;
+          }
+
+          // Download image from LINE Content API
+          const imageRes = await fetch(`https://api-data.line.me/v2/bot/message/${messageId}/content`, {
+            headers: {
+              'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`
+            }
+          });
+
+          if (!imageRes.ok) {
+            throw new Error(`LINE image download failed with status ${imageRes.status}`);
+          }
+
+          const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
+
+          // Save image to storage
+          const uploadDir = path.join(__dirname, '../../public/uploads/slips');
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+          }
+          const filename = `slip-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.jpg`;
+          const filePath = path.join(uploadDir, filename);
+          fs.writeFileSync(filePath, imageBuffer);
+
+          const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+          const backendUrl = `${protocol}://${req.get('host')}`;
+          const slipUrl = `${backendUrl}/uploads/slips/${filename}`;
+
+          // Verify slip with SlipOK
+          const slipResult = await verifySlipWithSlipOk(imageBuffer);
+
+          if (!slipResult.success || !slipResult.data) {
+            // Log failed scan
+            await SlipVerificationLog.create({
+              room: tenant.room?._id,
+              tenant: tenant._id,
+              success: false,
+              errorMessage: `ตรวจสลิปไม่สำเร็จ: ${slipResult.message || 'ข้อมูลสลิปไม่ถูกต้องหรือสแกน QR Code ไม่พบ'}`,
+              slipUrl,
+              source: 'line'
+            });
+
+            await lineReply(event.replyToken, [{
+              type: 'text',
+              text: `❌ ตรวจสอบสลิปไม่สำเร็จ: ${slipResult.message || 'ข้อมูลสลิปไม่ถูกต้อง หรือไม่พบ QR Code ในรูปภาพสลิป'}`
+            }]);
+            continue;
+          }
+
+          const transRef = slipResult.data.transRef;
+          const slipAmount = Number(slipResult.data.amount);
+          const actualReceiverName = slipResult.data.receiver?.displayName || '';
+          const actualReceiverAccount = slipResult.data.receiver?.account?.value || '';
+
+          // Lock transaction reference to prevent double spend
+          if (transRef && processingRefs.has(transRef)) {
+            await lineReply(event.replyToken, [{
+              type: 'text',
+              text: '⏳ สลิปหมายเลขธุรกรรมนี้กำลังได้รับการประมวลผล กรุณารอผลสักครู่ค่ะ'
+            }]);
+            continue;
+          }
+          if (transRef) processingRefs.add(transRef);
+
+          try {
+            // Check for duplicate in DB
+            if (transRef) {
+              const existingBill = await Bill.findOne({ transRef });
+              const existingLog = await SlipVerificationLog.findOne({ transRef, success: true });
+              if (existingBill || existingLog) {
+                await SlipVerificationLog.create({
+                  transRef,
+                  room: tenant.room?._id,
+                  tenant: tenant._id,
+                  amount: slipAmount,
+                  senderName: slipResult.data.sender?.displayName || '',
+                  receiverName: actualReceiverName,
+                  receiverAccount: actualReceiverAccount,
+                  transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+                  success: false,
+                  errorMessage: 'พบสลิปโอนเงินรหัสธุรกรรมนี้ซ้ำในระบบ (สลิปโอนซ้ำ)',
+                  slipUrl,
+                  source: 'line'
+                });
+
+                await lineReply(event.replyToken, [{
+                  type: 'text',
+                  text: `❌ สลิปโอนเงินนี้เคยใช้ยืนยันยอดชำระไปแล้วค่ะ (รหัสธุรกรรม: ${transRef})\n\nระบบไม่สามารถอนุมัติรายการซ้ำได้ หากมีข้อผิดพลาดกรุณาติดต่อผู้ดูแลค่ะ`
+                }]);
+                continue;
+              }
+            }
+
+            // Verify receiving bank account
+            const expectedReceiverName = process.env.SLIPOK_RECEIVER_NAME;
+            const expectedReceiverAccount = process.env.SLIPOK_RECEIVER_ACCOUNT;
+            let receiverValid = true;
+            let invalidReason = '';
+
+            if (expectedReceiverName && !actualReceiverName.includes(expectedReceiverName)) {
+              receiverValid = false;
+              invalidReason = `บัญชีผู้รับเงินปลายทางไม่ตรงกับหอพัก (โอนไปที่: ${actualReceiverName})`;
+            }
+            if (expectedReceiverAccount && actualReceiverAccount) {
+              const cleanActual = actualReceiverAccount.replace(/-/g, '');
+              const cleanExpected = expectedReceiverAccount.replace(/-/g, '');
+              if (!cleanActual.includes(cleanExpected)) {
+                receiverValid = false;
+                invalidReason = `เลขบัญชี/PromptPay ปลายทางไม่ตรงกับหอพัก (โอนไปที่: ${actualReceiverAccount})`;
+              }
+            }
+
+            if (!receiverValid) {
+              await SlipVerificationLog.create({
+                transRef,
+                room: tenant.room?._id,
+                tenant: tenant._id,
+                amount: slipAmount,
+                senderName: slipResult.data.sender?.displayName || '',
+                receiverName: actualReceiverName,
+                receiverAccount: actualReceiverAccount,
+                transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+                success: false,
+                errorMessage: invalidReason,
+                slipUrl,
+                source: 'line'
+              });
+
+              await lineReply(event.replyToken, [{
+                type: 'text',
+                text: `❌ บัญชีปลายทางผู้รับเงินในสลิปไม่ตรงกับบัญชีของหอพักค่ะ\n\nโอนไปที่: ${actualReceiverName || '-'}\n\nกรุณาตรวจสอบและใช้บัญชีที่ถูกต้องของหอพักในการโอนเงินนะคะ`
+              }]);
+              continue;
+            }
+
+            // Dynamic Bill Matching
+            const bills = await Bill.find({
+              room: tenant.room?._id,
+              isPaid: false
+            }).sort({ createdAt: 1 });
+
+            if (bills.length === 0) {
+              await SlipVerificationLog.create({
+                transRef,
+                room: tenant.room?._id,
+                tenant: tenant._id,
+                amount: slipAmount,
+                senderName: slipResult.data.sender?.displayName || '',
+                receiverName: actualReceiverName,
+                receiverAccount: actualReceiverAccount,
+                transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+                success: false,
+                errorMessage: 'ไม่พบยอดบิลค้างชำระสำหรับห้องนี้ในระบบ',
+                slipUrl,
+                source: 'line'
+              });
+
+              await lineReply(event.replyToken, [{
+                type: 'text',
+                text: `📢 ไม่พบยอดบิลค้างชำระสำหรับห้อง ${tenant.room?.roomNumber || '-'} ในระบบค่ะ`
+              }]);
+              continue;
+            }
+
+            // Find bill matching the amount
+            const matchedBill = bills.find(b => Math.abs(Number(b.totalAmount) - slipAmount) <= 0.01);
+
+            if (!matchedBill) {
+              await SlipVerificationLog.create({
+                transRef,
+                room: tenant.room?._id,
+                tenant: tenant._id,
+                amount: slipAmount,
+                senderName: slipResult.data.sender?.displayName || '',
+                receiverName: actualReceiverName,
+                receiverAccount: actualReceiverAccount,
+                transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+                success: false,
+                errorMessage: `ยอดเงินโอน (฿${slipAmount}) ไม่ตรงกับบิลค้างชำระใดๆ ของห้องนี้`,
+                slipUrl,
+                source: 'line'
+              });
+
+              const billAmountsStr = bills.map(b => `฿${b.totalAmount.toLocaleString('th-TH')}`).join(' หรือ ');
+              await lineReply(event.replyToken, [{
+                type: 'text',
+                text: `❌ ยอดเงินโอนไม่ตรงกับยอดในระบบค่ะ\n\n- ยอดในสลิป: ฿${slipAmount.toLocaleString('th-TH')}\n- ยอดค้างชำระของคุณ: ${billAmountsStr}\n\nกรุณาตรวจสอบอีกครั้งค่ะ`
+              }]);
+              continue;
+            }
+
+            // Mark bill as paid
+            matchedBill.isPaid = true;
+            matchedBill.paidDate = slipResult.data.transDate ? new Date(slipResult.data.transDate) : new Date();
+            matchedBill.status = 'paid';
+            matchedBill.transRef = transRef;
+            matchedBill.slipUrl = slipUrl;
+            if (transRef) {
+              matchedBill.remarks = matchedBill.remarks 
+                ? `${matchedBill.remarks} (โอนผ่าน LINE Ref: ${transRef})`
+                : `โอนผ่าน LINE Ref: ${transRef}`;
+            }
+            await matchedBill.save();
+
+            // Log successful verification
+            await SlipVerificationLog.create({
+              transRef,
+              bill: matchedBill._id,
+              room: tenant.room?._id,
+              tenant: tenant._id,
+              amount: slipAmount,
+              senderName: slipResult.data.sender?.displayName || '',
+              receiverName: actualReceiverName,
+              receiverAccount: actualReceiverAccount,
+              transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+              success: true,
+              slipUrl,
+              source: 'line'
+            });
+
+            // Trigger Flex message receipt
+            await exports.sendPaymentNotification(matchedBill._id);
+
+          } finally {
+            if (transRef) processingRefs.delete(transRef);
+          }
+
+        } catch (err) {
+          console.error('Error processing LINE slip verification:', err);
+          await lineReply(event.replyToken, [{
+            type: 'text',
+            text: '❌ เกิดข้อผิดพลาดในระบบตรวจสลิปชั่วคราว กรุณาส่งสลิปใหม่อีกครั้ง หรือติดต่อแอดมินโดยตรงค่ะ'
+          }]);
+        } finally {
+          processingUsers.delete(lineUserId);
         }
       }
     } catch (err) {
