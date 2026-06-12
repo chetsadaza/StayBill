@@ -97,37 +97,54 @@ exports.parseSlipDate = (slipData) => {
   return null;
 };
 
-// Check if an actual (possibly masked) account number matches the expected account number (allowing wildcards 'x', 'X', '*', '_')
+// Check if an actual (possibly masked) account number matches the expected account number
+// Supports wildcard/mask characters: x, X, *, _, •
+// Requires at least 3 real (unmasked) digit positions to overlap and match for security
 exports.matchMaskedAccount = (actual, expected) => {
   if (!actual || !expected) return false;
 
-  const cleanActual = actual.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-  const cleanExpected = expected.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  // Remove only formatting chars (dashes, spaces) but KEEP mask chars like *, x, _, •
+  const cleanActual = actual.replace(/[-\s.]/g, '');
+  const cleanExpected = expected.replace(/[-\s.]/g, '');
 
-  // If they match exactly
-  if (cleanActual === cleanExpected) return true;
+  // If they match exactly (case-insensitive)
+  if (cleanActual.toLowerCase() === cleanExpected.toLowerCase()) return true;
 
   // If lengths are different, they cannot match under positional masking
   if (cleanActual.length !== cleanExpected.length) return false;
+
+  const wildcardChars = new Set(['x', 'X', '*', '_', '•', '●']);
+  let matchedDigits = 0; // count of real digit positions that matched
 
   // Compare position by position
   for (let i = 0; i < cleanActual.length; i++) {
     const actChar = cleanActual[i];
     const expChar = cleanExpected[i];
 
-    const isActWildcard = actChar === 'x' || actChar === '*' || actChar === '_';
-    const isExpWildcard = expChar === 'x' || expChar === '*' || expChar === '_';
+    const isActWildcard = wildcardChars.has(actChar);
+    const isExpWildcard = wildcardChars.has(expChar);
 
-    if (isActWildcard || isExpWildcard) {
+    if (isActWildcard && isExpWildcard) {
+      // Both masked — skip, no information
       continue;
     }
 
+    if (isActWildcard || isExpWildcard) {
+      // One side is masked — skip, cannot compare
+      continue;
+    }
+
+    // Both sides have real characters — must match
     if (actChar !== expChar) {
       return false;
     }
+
+    matchedDigits++;
   }
 
-  return true;
+  // Require at least 3 real digit positions to overlap for security
+  // This prevents false positives when both sides mask different positions
+  return matchedDigits >= 3;
 };
 
 
