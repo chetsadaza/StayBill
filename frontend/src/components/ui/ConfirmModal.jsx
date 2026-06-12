@@ -2,7 +2,7 @@ import { MdHelpOutline, MdClose } from 'react-icons/md';
 
 export default function ConfirmModal({ message, onConfirm, onCancel, confirmText = 'ตกลง', cancelText = 'ยกเลิก' }) {
   return (
-    <div className="modal-overlay" style={{ zIndex: 2200 }}>
+    <div className="modal-overlay" style={{ zIndex: 2200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div 
         className="glass-card confirm-modal-animation" 
         style={{ 
