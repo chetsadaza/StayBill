@@ -292,7 +292,7 @@ exports.sendBillNotification = async (req, res, next) => {
               type: 'box',
               layout: 'horizontal',
               contents: [
-                { type: 'text', text: 'ส่วนลด', color: '#ef4444', size: 'sm', flex: 5 },
+                { type: 'text', text: `ส่วนลด${bill.remarks ? ` (${bill.remarks})` : ''}`, color: '#ef4444', size: 'sm', flex: 5 },
                 { type: 'text', text: `-฿${bill.discount.toLocaleString()}`, color: '#ef4444', size: 'sm', flex: 3, align: 'end' }
               ]
             }] : []),
@@ -306,7 +306,7 @@ exports.sendBillNotification = async (req, res, next) => {
                 { type: 'text', text: `฿${totalAmount}`, weight: 'bold', size: 'lg', color: '#4f46e5', flex: 3, align: 'end' }
               ]
             },
-            ...(bill.remarks ? [{
+            ...(bill.remarks && (!bill.discount || bill.discount <= 0) ? [{
               type: 'box',
               layout: 'vertical',
               margin: 'lg',

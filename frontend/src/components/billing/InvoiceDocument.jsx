@@ -56,7 +56,7 @@ export default function InvoiceDocument({ bill, settings, printRef, className = 
           </div>
           {bill.discount > 0 && (
             <div className="invoice-total-row invoice-total-row--discount">
-              <span>ส่วนลด (Discount)</span>
+              <span>ส่วนลด (Discount) {bill.remarks ? `(${bill.remarks})` : ''}</span>
               <span>- {formatTHB(bill.discount)}</span>
             </div>
           )}
@@ -70,7 +70,7 @@ export default function InvoiceDocument({ bill, settings, printRef, className = 
       <div className="invoice-footer-grid">
         <div className="invoice-notes">
           <p className="invoice-notes-title">หมายเหตุ</p>
-          {bill.remarks && (
+          {bill.remarks && (!bill.discount || bill.discount <= 0) && (
             <p className="invoice-notes-remark">* {bill.remarks}</p>
           )}
           <p>1. กรุณาชำระเงินภายในวันที่ 5 ของเดือน เพื่อหลีกเลี่ยงค่าปรับล่าช้า</p>
