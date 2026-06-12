@@ -51,9 +51,23 @@ exports.verifySlipWithSlipOk = async (imageBuffer) => {
   });
 
   if (!res.ok) {
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        const errJson = await res.json();
+        return {
+          success: false,
+          code: errJson.code,
+          message: errJson.message || 'ข้อมูลสลิปไม่ถูกต้อง',
+          data: errJson.data
+        };
+      } catch (e) {
+        // fallback to text error if JSON parsing fails
+      }
+    }
     const errText = await res.text();
     console.error('SlipOK API failed response:', errText);
-    throw new Error('ไม่สามารถเชื่อมต่อบริการตรวจสอบสลิปได้');
+    throw new Error(`ไม่สามารถเชื่อมต่อบริการตรวจสอบสลิปได้ (HTTP ${res.status}): ${errText}`);
   }
 
   return res.json();
