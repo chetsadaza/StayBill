@@ -73,3 +73,28 @@ exports.verifySlipWithSlipOk = async (imageBuffer) => {
   return res.json();
 };
 
+// Parse date/time from SlipOK response into a valid JavaScript Date
+exports.parseSlipDate = (slipData) => {
+  if (!slipData) return null;
+  
+  // 1. Try transTimestamp first as it's the recommended ISO 8601 field
+  if (slipData.transTimestamp) {
+    const d = new Date(slipData.transTimestamp);
+    if (!isNaN(d.getTime())) return d;
+  }
+  
+  // 2. Try parsing transDate (yyyyMMdd) and transTime (HH:mm:ss)
+  if (slipData.transDate && typeof slipData.transDate === 'string' && slipData.transDate.length === 8) {
+    const y = slipData.transDate.substring(0, 4);
+    const m = slipData.transDate.substring(4, 6);
+    const d = slipData.transDate.substring(6, 8);
+    const time = slipData.transTime || '00:00:00';
+    const dateStr = `${y}-${m}-${d}T${time}`;
+    const parsedDate = new Date(dateStr);
+    if (!isNaN(parsedDate.getTime())) return parsedDate;
+  }
+
+  return null;
+};
+
+

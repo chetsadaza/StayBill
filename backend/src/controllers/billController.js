@@ -3,7 +3,7 @@ const Room = require('../models/Room');
 const Tenant = require('../models/Tenant');
 const SlipVerificationLog = require('../models/SlipVerificationLog');
 const { calculateWater, calculateElectricity, calculateTotal } = require('../utils/billCalculator');
-const { getCurrentMonth, verifySlipWithSlipOk } = require('../utils/helpers');
+const { getCurrentMonth, verifySlipWithSlipOk, parseSlipDate } = require('../utils/helpers');
 const { sendPaymentNotification } = require('./lineController');
 const fs = require('fs');
 const path = require('path');
@@ -360,7 +360,7 @@ exports.verifySlip = async (req, res, next) => {
             senderName: slipResult.data.sender?.displayName || '',
             receiverName: actualReceiverName,
             receiverAccount: actualReceiverAccount,
-            transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+            transDate: parseSlipDate(slipResult.data),
             success: false,
             errorMessage: 'พบสลิปโอนเงินรหัสธุรกรรมนี้ซ้ำในระบบ (สลิปโอนซ้ำ)',
             slipUrl,
@@ -403,7 +403,7 @@ exports.verifySlip = async (req, res, next) => {
           senderName: slipResult.data.sender?.displayName || '',
           receiverName: actualReceiverName,
           receiverAccount: actualReceiverAccount,
-          transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+          transDate: parseSlipDate(slipResult.data),
           success: false,
           errorMessage: invalidReason,
           slipUrl,
@@ -428,7 +428,7 @@ exports.verifySlip = async (req, res, next) => {
           senderName: slipResult.data.sender?.displayName || '',
           receiverName: actualReceiverName,
           receiverAccount: actualReceiverAccount,
-          transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+          transDate: parseSlipDate(slipResult.data),
           success: false,
           errorMessage: `ยอดเงินในสลิป (฿${slipAmount}) ไม่ตรงกับยอดเรียกเก็บของบิลนี้ (฿${billAmount})`,
           slipUrl,
@@ -443,7 +443,7 @@ exports.verifySlip = async (req, res, next) => {
 
       // Update Bill
       bill.isPaid = true;
-      bill.paidDate = slipResult.data.transDate ? new Date(slipResult.data.transDate) : new Date();
+      bill.paidDate = parseSlipDate(slipResult.data) || new Date();
       bill.status = 'paid';
       bill.transRef = transRef;
       bill.slipUrl = slipUrl;
@@ -464,7 +464,7 @@ exports.verifySlip = async (req, res, next) => {
         senderName: slipResult.data.sender?.displayName || '',
         receiverName: actualReceiverName,
         receiverAccount: actualReceiverAccount,
-        transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+        transDate: parseSlipDate(slipResult.data),
         success: true,
         slipUrl,
         source: 'admin'

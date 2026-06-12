@@ -4,7 +4,7 @@ const path = require('path');
 const Tenant = require('../models/Tenant');
 const Bill = require('../models/Bill');
 const SlipVerificationLog = require('../models/SlipVerificationLog');
-const { verifySlipWithSlipOk } = require('../utils/helpers');
+const { verifySlipWithSlipOk, parseSlipDate } = require('../utils/helpers');
 
 // Lock sets for slip concurrency control
 const processingUsers = new Set();
@@ -232,7 +232,7 @@ exports.handleWebhook = async (req, res) => {
                   senderName: slipResult.data.sender?.displayName || '',
                   receiverName: actualReceiverName,
                   receiverAccount: actualReceiverAccount,
-                  transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+                  transDate: parseSlipDate(slipResult.data),
                   success: false,
                   errorMessage: 'พบสลิปโอนเงินรหัสธุรกรรมนี้ซ้ำในระบบ (สลิปโอนซ้ำ)',
                   slipUrl,
@@ -304,7 +304,7 @@ exports.handleWebhook = async (req, res) => {
                 senderName: slipResult.data.sender?.displayName || '',
                 receiverName: actualReceiverName,
                 receiverAccount: actualReceiverAccount,
-                transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+                transDate: parseSlipDate(slipResult.data),
                 success: false,
                 errorMessage: 'ไม่พบยอดบิลค้างชำระสำหรับห้องนี้ในระบบ',
                 slipUrl,
@@ -330,7 +330,7 @@ exports.handleWebhook = async (req, res) => {
                 senderName: slipResult.data.sender?.displayName || '',
                 receiverName: actualReceiverName,
                 receiverAccount: actualReceiverAccount,
-                transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+                transDate: parseSlipDate(slipResult.data),
                 success: false,
                 errorMessage: `ยอดเงินโอน (฿${slipAmount}) ไม่ตรงกับบิลค้างชำระใดๆ ของห้องนี้`,
                 slipUrl,
@@ -347,7 +347,7 @@ exports.handleWebhook = async (req, res) => {
 
             // Mark bill as paid
             matchedBill.isPaid = true;
-            matchedBill.paidDate = slipResult.data.transDate ? new Date(slipResult.data.transDate) : new Date();
+            matchedBill.paidDate = parseSlipDate(slipResult.data) || new Date();
             matchedBill.status = 'paid';
             matchedBill.transRef = transRef;
             matchedBill.slipUrl = slipUrl;
@@ -368,7 +368,7 @@ exports.handleWebhook = async (req, res) => {
               senderName: slipResult.data.sender?.displayName || '',
               receiverName: actualReceiverName,
               receiverAccount: actualReceiverAccount,
-              transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+              transDate: parseSlipDate(slipResult.data),
               success: true,
               slipUrl,
               source: 'line'
