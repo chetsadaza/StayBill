@@ -275,7 +275,7 @@ exports.handleWebhook = async (req, res) => {
                 senderName: slipResult.data.sender?.displayName || '',
                 receiverName: actualReceiverName,
                 receiverAccount: actualReceiverAccount,
-                transDate: slipResult.data.transDate ? new Date(slipResult.data.transDate) : null,
+                transDate: parseSlipDate(slipResult.data),
                 success: false,
                 errorMessage: invalidReason,
                 slipUrl,
