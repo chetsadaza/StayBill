@@ -96,6 +96,8 @@ export const api = {
   // Settings
   getSettings: () => request('/settings'),
   updateSettings: (data) => request('/settings', { method: 'PUT', body: data }),
+  uploadPaymentQr: (imageBase64) => request('/settings/upload-qr', { method: 'POST', body: { imageBase64 } }),
+  deletePaymentQr: () => request('/settings/upload-qr', { method: 'DELETE' }),
 
   // LINE Integration
   generateLineToken: (tenantId) => request(`/line/generate-token/${tenantId}`, { method: 'POST' }),

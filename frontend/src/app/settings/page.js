@@ -16,7 +16,11 @@ import {
   MdMail, 
   MdLock,
   MdEdit,
-  MdDelete
+  MdDelete,
+  MdQrCode2,
+  MdAccountBalance,
+  MdImage,
+  MdCreditCard
 } from 'react-icons/md';
 import Toast from '@/components/ui/Toast';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -30,8 +34,14 @@ export default function SettingsPage() {
     address: '',
     phone: '',
     defaultWaterRate: 18,
-    defaultElectricityRate: 8
+    defaultElectricityRate: 8,
+    bankName: '',
+    bankAccountName: '',
+    bankAccountNumber: '',
+    paymentQrImage: ''
   });
+  const [qrPreview, setQrPreview] = useState(null);
+  const [uploadingQr, setUploadingQr] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -368,6 +378,187 @@ export default function SettingsPage() {
                           onChange={handleInputChange}
                           min="0"
                           required
+                          style={{ paddingLeft: '38px' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '0' }} />
+
+                {/* Payment Info: QR Code + Bank Account */}
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', color: 'var(--text-primary)' }}>
+                    <span style={{ color: '#10b981', display: 'flex', alignItems: 'center' }}><MdQrCode2 size={20} /></span>
+                    ข้อมูลบัญชีรับชำระเงิน <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '4px' }}>(แสดงใน LINE เมื่อส่งบิล)</span>
+                  </h3>
+
+                  {/* QR Code Upload */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">รูป QR Code สำหรับชำระเงิน</label>
+                      <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                        {/* Preview */}
+                        <div style={{
+                          width: '160px',
+                          height: '160px',
+                          borderRadius: '12px',
+                          border: '2px dashed var(--border-color)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                          background: 'var(--bg-secondary)',
+                          flexShrink: 0
+                        }}>
+                          {(qrPreview || settings.paymentQrImage) ? (
+                            <img 
+                              src={qrPreview || settings.paymentQrImage} 
+                              alt="QR Code" 
+                              style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                            />
+                          ) : (
+                            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '12px' }}>
+                              <MdImage size={36} style={{ opacity: 0.4 }} />
+                              <p style={{ fontSize: '0.75rem', margin: '8px 0 0' }}>ยังไม่มีรูป QR</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Upload/Delete Buttons */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <label 
+                            className="btn btn-secondary" 
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '8px 16px', fontSize: '0.85rem' }}
+                          >
+                            <MdImage size={16} />
+                            {uploadingQr ? 'กำลังอัพโหลด...' : 'เลือกรูป QR Code'}
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              style={{ display: 'none' }}
+                              disabled={uploadingQr}
+                              onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+                                
+                                // Validate file size (max 5MB)
+                                if (file.size > 5 * 1024 * 1024) {
+                                  showToast('ขนาดไฟล์ต้องไม่เกิน 5 MB', 'warning');
+                                  return;
+                                }
+
+                                // Read file as base64
+                                const reader = new FileReader();
+                                reader.onload = async (ev) => {
+                                  const base64 = ev.target.result;
+                                  setQrPreview(base64);
+                                  
+                                  try {
+                                    setUploadingQr(true);
+                                    const res = await api.uploadPaymentQr(base64);
+                                    if (res.success && res.data) {
+                                      setSettings(prev => ({ ...prev, paymentQrImage: res.data.paymentQrImage }));
+                                      setQrPreview(null);
+                                      showToast('อัพโหลดรูป QR Code สำเร็จ', 'success');
+                                    }
+                                  } catch (err) {
+                                    showToast(err.message || 'อัพโหลดรูป QR Code ไม่สำเร็จ', 'error');
+                                    setQrPreview(null);
+                                  } finally {
+                                    setUploadingQr(false);
+                                  }
+                                };
+                                reader.readAsDataURL(file);
+                                // Reset input so same file can be re-selected
+                                e.target.value = '';
+                              }}
+                            />
+                          </label>
+                          
+                          {(settings.paymentQrImage) && (
+                            <button 
+                              type="button" 
+                              className="btn btn-danger" 
+                              style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                              onClick={async () => {
+                                try {
+                                  const res = await api.deletePaymentQr();
+                                  if (res.success) {
+                                    setSettings(prev => ({ ...prev, paymentQrImage: '' }));
+                                    setQrPreview(null);
+                                    showToast('ลบรูป QR Code สำเร็จ', 'success');
+                                  }
+                                } catch (err) {
+                                  showToast(err.message || 'ลบรูป QR Code ไม่สำเร็จ', 'error');
+                                }
+                              }}
+                            >
+                              <MdDelete size={16} />
+                              ลบรูป QR
+                            </button>
+                          )}
+
+                          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
+                            รองรับไฟล์ PNG, JPG ขนาดไม่เกิน 5 MB
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bank Account Fields */}
+                    <div className="form-grid-2" style={{ marginTop: '4px' }}>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">ชื่อธนาคาร</label>
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                            <MdAccountBalance size={18} />
+                          </span>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            name="bankName" 
+                            value={settings.bankName}
+                            onChange={handleInputChange}
+                            placeholder="เช่น ธ.กสิกรไทย, ธ.ไทยพาณิชย์"
+                            style={{ paddingLeft: '38px' }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">ชื่อบัญชี</label>
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                            <MdPerson size={18} />
+                          </span>
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            name="bankAccountName" 
+                            value={settings.bankAccountName}
+                            onChange={handleInputChange}
+                            placeholder="เช่น นายสมชาย ใจดี"
+                            style={{ paddingLeft: '38px' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0, maxWidth: '400px' }}>
+                      <label className="form-label">เลขบัญชี / PromptPay</label>
+                      <div style={{ position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+                          <MdCreditCard size={18} />
+                        </span>
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          name="bankAccountNumber" 
+                          value={settings.bankAccountNumber}
+                          onChange={handleInputChange}
+                          placeholder="เช่น 123-4-56789-0 หรือ 081-234-5678"
                           style={{ paddingLeft: '38px' }}
                         />
                       </div>

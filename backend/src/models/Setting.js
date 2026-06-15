@@ -20,6 +20,22 @@ const settingSchema = new mongoose.Schema({
   defaultElectricityRate: {
     type: Number,
     default: 8
+  },
+  paymentQrImage: {
+    type: String,
+    default: ''
+  },
+  bankName: {
+    type: String,
+    default: ''
+  },
+  bankAccountName: {
+    type: String,
+    default: ''
+  },
+  bankAccountNumber: {
+    type: String,
+    default: ''
   }
 }, {
   timestamps: true

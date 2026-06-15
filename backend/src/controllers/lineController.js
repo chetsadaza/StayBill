@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const Tenant = require('../models/Tenant');
 const Bill = require('../models/Bill');
+const Setting = require('../models/Setting');
 const SlipVerificationLog = require('../models/SlipVerificationLog');
 const { verifySlipWithSlipOk, parseSlipDate, matchMaskedAccount } = require('../utils/helpers');
 
@@ -470,6 +471,9 @@ exports.sendBillNotification = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'ผู้เช่ารายนี้ยังไม่ได้เชื่อมต่อ LINE' });
     }
 
+    // ดึงข้อมูลตั้งค่า (QR Code + บัญชีธนาคาร)
+    const settings = await Setting.findOne();
+
     const lineUserId = bill.tenant.lineUserId;
     const tenantName = `${bill.tenant.firstName} ${bill.tenant.lastName}`;
     const roomNumber = bill.room?.roomNumber || '-';
@@ -480,31 +484,234 @@ exports.sendBillNotification = async (req, res, next) => {
     const totalAmount = bill.totalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const billDetailUrl = `${APP_BASE_URL}/share/bill/${bill._id}`;
 
-    // สร้าง Flex Message Card สวยงาม
-    const flexMessage = {
-      type: 'flex',
-      altText: `ใบแจ้งหนี้ค่าเช่า ห้อง ${roomNumber} ประจำเดือน ${thaiMonth} — ยอดรวม ฿${totalAmount}`,
-      contents: {
+    // Bubble 1: ใบแจ้งหนี้
+    const billBubble = {
+      type: 'bubble',
+      size: 'giga',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#4f46e5',
+        paddingAll: '20px',
+        contents: [
+          {
+            type: 'text',
+            text: '📋 ใบแจ้งหนี้ค่าเช่า',
+            color: '#FFFFFF',
+            weight: 'bold',
+            size: 'lg'
+          },
+          {
+            type: 'text',
+            text: `ประจำเดือน ${thaiMonth}`,
+            color: '#C7D2FE',
+            size: 'sm',
+            margin: 'sm'
+          }
+        ]
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        paddingAll: '20px',
+        spacing: 'md',
+        contents: [
+          {
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              { type: 'text', text: 'ผู้เช่า', color: '#8b8b8b', size: 'sm', flex: 3 },
+              { type: 'text', text: tenantName, weight: 'bold', size: 'sm', flex: 5, align: 'end' }
+            ]
+          },
+          {
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              { type: 'text', text: 'ห้องพัก', color: '#8b8b8b', size: 'sm', flex: 3 },
+              { type: 'text', text: `ห้อง ${roomNumber}`, weight: 'bold', size: 'sm', flex: 5, align: 'end' }
+            ]
+          },
+          { type: 'separator', margin: 'lg' },
+          // รายการค่าใช้จ่าย
+          {
+            type: 'box',
+            layout: 'horizontal',
+            margin: 'lg',
+            contents: [
+              { type: 'text', text: 'ค่าเช่าห้อง', color: '#555555', size: 'sm', flex: 5 },
+              { type: 'text', text: `฿${bill.monthlyRent.toLocaleString()}`, size: 'sm', flex: 3, align: 'end' }
+            ]
+          },
+          ...(bill.waterTotal > 0 ? [{
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              { type: 'text', text: `ค่าน้ำ${bill.waterType === 'unit' ? ` (${bill.waterUnits} หน่วย)` : ''}`, color: '#555555', size: 'sm', flex: 5 },
+              { type: 'text', text: `฿${bill.waterTotal.toLocaleString()}`, size: 'sm', flex: 3, align: 'end' }
+            ]
+          }] : []),
+          ...(bill.electricityTotal > 0 ? [{
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              { type: 'text', text: `ค่าไฟ${bill.electricityType === 'unit' ? ` (${bill.electricityUnits} หน่วย)` : ''}`, color: '#555555', size: 'sm', flex: 5 },
+              { type: 'text', text: `฿${bill.electricityTotal.toLocaleString()}`, size: 'sm', flex: 3, align: 'end' }
+            ]
+          }] : []),
+          ...(bill.additionalCharges && bill.additionalCharges.length > 0 ? bill.additionalCharges.map(c => ({
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              { type: 'text', text: c.description || 'ค่าบริการเสริม', color: '#555555', size: 'sm', flex: 5 },
+              { type: 'text', text: `฿${(c.amount || 0).toLocaleString()}`, size: 'sm', flex: 3, align: 'end' }
+            ]
+          })) : []),
+          ...(bill.discount > 0 ? [{
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              { type: 'text', text: `ส่วนลด${bill.remarks ? ` (${bill.remarks})` : ''}`, color: '#ef4444', size: 'sm', flex: 5 },
+              { type: 'text', text: `-฿${bill.discount.toLocaleString()}`, color: '#ef4444', size: 'sm', flex: 3, align: 'end' }
+            ]
+          }] : []),
+          { type: 'separator', margin: 'lg' },
+          {
+            type: 'box',
+            layout: 'horizontal',
+            margin: 'lg',
+            contents: [
+              { type: 'text', text: 'ยอดเรียกเก็บสุทธิ', weight: 'bold', size: 'md', flex: 5 },
+              { type: 'text', text: `฿${totalAmount}`, weight: 'bold', size: 'lg', color: '#4f46e5', flex: 3, align: 'end' }
+            ]
+          },
+          ...(bill.remarks && (!bill.discount || bill.discount <= 0) ? [{
+            type: 'box',
+            layout: 'vertical',
+            margin: 'lg',
+            contents: [
+              { type: 'text', text: `📝 หมายเหตุ: ${bill.remarks}`, color: '#ef4444', size: 'xs', wrap: true }
+            ]
+          }] : [])
+        ]
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        paddingAll: '16px',
+        spacing: 'sm',
+        contents: [
+          {
+            type: 'button',
+            style: 'primary',
+            color: '#4f46e5',
+            action: {
+              type: 'uri',
+              label: 'ดูรายละเอียดใบแจ้งหนี้',
+              uri: billDetailUrl
+            }
+          },
+          {
+            type: 'text',
+            text: 'กรุณาชำระเงินภายในวันที่ 5 ของเดือน',
+            color: '#aaaaaa',
+            size: 'xxs',
+            align: 'center',
+            margin: 'md'
+          }
+        ]
+      }
+    };
+
+    // ตรวจว่ามีข้อมูล QR Code / บัญชีธนาคารหรือไม่
+    const hasPaymentInfo = settings && (
+      settings.paymentQrImage ||
+      (settings.bankName && settings.bankAccountNumber)
+    );
+
+    let flexContents;
+
+    if (hasPaymentInfo) {
+      // Bubble 2: QR Code + ข้อมูลบัญชีธนาคาร
+      const paymentBodyContents = [];
+
+      // แสดงรูป QR Code (ถ้ามี)
+      if (settings.paymentQrImage) {
+        paymentBodyContents.push({
+          type: 'image',
+          url: settings.paymentQrImage,
+          size: 'xl',
+          aspectMode: 'fit',
+          aspectRatio: '1:1'
+        });
+      }
+
+      // แสดงข้อมูลบัญชีธนาคาร
+      if (settings.bankName) {
+        paymentBodyContents.push({
+          type: 'box',
+          layout: 'horizontal',
+          margin: settings.paymentQrImage ? 'lg' : 'none',
+          contents: [
+            { type: 'text', text: 'ธนาคาร', color: '#8b8b8b', size: 'sm', flex: 3 },
+            { type: 'text', text: settings.bankName, weight: 'bold', size: 'sm', flex: 5, align: 'end' }
+          ]
+        });
+      }
+      if (settings.bankAccountName) {
+        paymentBodyContents.push({
+          type: 'box',
+          layout: 'horizontal',
+          contents: [
+            { type: 'text', text: 'ชื่อบัญชี', color: '#8b8b8b', size: 'sm', flex: 3 },
+            { type: 'text', text: settings.bankAccountName, weight: 'bold', size: 'sm', flex: 5, align: 'end' }
+          ]
+        });
+      }
+      if (settings.bankAccountNumber) {
+        paymentBodyContents.push({
+          type: 'box',
+          layout: 'horizontal',
+          contents: [
+            { type: 'text', text: 'เลขบัญชี', color: '#8b8b8b', size: 'sm', flex: 3 },
+            { type: 'text', text: settings.bankAccountNumber, weight: 'bold', size: 'sm', flex: 5, align: 'end' }
+          ]
+        });
+      }
+
+      // ยอดรวมอีกครั้ง
+      paymentBodyContents.push({ type: 'separator', margin: 'lg' });
+      paymentBodyContents.push({
+        type: 'box',
+        layout: 'horizontal',
+        margin: 'lg',
+        contents: [
+          { type: 'text', text: 'ยอดที่ต้องชำระ', weight: 'bold', size: 'md', flex: 5 },
+          { type: 'text', text: `฿${totalAmount}`, weight: 'bold', size: 'lg', color: '#4f46e5', flex: 3, align: 'end' }
+        ]
+      });
+
+      const paymentBubble = {
         type: 'bubble',
         size: 'giga',
         header: {
           type: 'box',
           layout: 'vertical',
-          backgroundColor: '#4f46e5',
+          backgroundColor: '#10b981',
           paddingAll: '20px',
           contents: [
             {
               type: 'text',
-              text: '📋 ใบแจ้งหนี้ค่าเช่า',
+              text: '💳 ช่องทางชำระเงิน',
               color: '#FFFFFF',
               weight: 'bold',
               size: 'lg'
             },
             {
               type: 'text',
-              text: `ประจำเดือน ${thaiMonth}`,
-              color: '#C7D2FE',
-              size: 'sm',
+              text: 'สแกน QR Code หรือโอนเข้าบัญชีด้านล่าง',
+              color: '#D1FAE5',
+              size: 'xs',
               margin: 'sm'
             }
           ]
@@ -514,113 +721,39 @@ exports.sendBillNotification = async (req, res, next) => {
           layout: 'vertical',
           paddingAll: '20px',
           spacing: 'md',
-          contents: [
-            {
-              type: 'box',
-              layout: 'horizontal',
-              contents: [
-                { type: 'text', text: 'ผู้เช่า', color: '#8b8b8b', size: 'sm', flex: 3 },
-                { type: 'text', text: tenantName, weight: 'bold', size: 'sm', flex: 5, align: 'end' }
-              ]
-            },
-            {
-              type: 'box',
-              layout: 'horizontal',
-              contents: [
-                { type: 'text', text: 'ห้องพัก', color: '#8b8b8b', size: 'sm', flex: 3 },
-                { type: 'text', text: `ห้อง ${roomNumber}`, weight: 'bold', size: 'sm', flex: 5, align: 'end' }
-              ]
-            },
-            { type: 'separator', margin: 'lg' },
-            // รายการค่าใช้จ่าย
-            {
-              type: 'box',
-              layout: 'horizontal',
-              margin: 'lg',
-              contents: [
-                { type: 'text', text: 'ค่าเช่าห้อง', color: '#555555', size: 'sm', flex: 5 },
-                { type: 'text', text: `฿${bill.monthlyRent.toLocaleString()}`, size: 'sm', flex: 3, align: 'end' }
-              ]
-            },
-            ...(bill.waterTotal > 0 ? [{
-              type: 'box',
-              layout: 'horizontal',
-              contents: [
-                { type: 'text', text: `ค่าน้ำ${bill.waterType === 'unit' ? ` (${bill.waterUnits} หน่วย)` : ''}`, color: '#555555', size: 'sm', flex: 5 },
-                { type: 'text', text: `฿${bill.waterTotal.toLocaleString()}`, size: 'sm', flex: 3, align: 'end' }
-              ]
-            }] : []),
-            ...(bill.electricityTotal > 0 ? [{
-              type: 'box',
-              layout: 'horizontal',
-              contents: [
-                { type: 'text', text: `ค่าไฟ${bill.electricityType === 'unit' ? ` (${bill.electricityUnits} หน่วย)` : ''}`, color: '#555555', size: 'sm', flex: 5 },
-                { type: 'text', text: `฿${bill.electricityTotal.toLocaleString()}`, size: 'sm', flex: 3, align: 'end' }
-              ]
-            }] : []),
-            ...(bill.additionalCharges && bill.additionalCharges.length > 0 ? bill.additionalCharges.map(c => ({
-              type: 'box',
-              layout: 'horizontal',
-              contents: [
-                { type: 'text', text: c.description || 'ค่าบริการเสริม', color: '#555555', size: 'sm', flex: 5 },
-                { type: 'text', text: `฿${(c.amount || 0).toLocaleString()}`, size: 'sm', flex: 3, align: 'end' }
-              ]
-            })) : []),
-            ...(bill.discount > 0 ? [{
-              type: 'box',
-              layout: 'horizontal',
-              contents: [
-                { type: 'text', text: `ส่วนลด${bill.remarks ? ` (${bill.remarks})` : ''}`, color: '#ef4444', size: 'sm', flex: 5 },
-                { type: 'text', text: `-฿${bill.discount.toLocaleString()}`, color: '#ef4444', size: 'sm', flex: 3, align: 'end' }
-              ]
-            }] : []),
-            { type: 'separator', margin: 'lg' },
-            {
-              type: 'box',
-              layout: 'horizontal',
-              margin: 'lg',
-              contents: [
-                { type: 'text', text: 'ยอดเรียกเก็บสุทธิ', weight: 'bold', size: 'md', flex: 5 },
-                { type: 'text', text: `฿${totalAmount}`, weight: 'bold', size: 'lg', color: '#4f46e5', flex: 3, align: 'end' }
-              ]
-            },
-            ...(bill.remarks && (!bill.discount || bill.discount <= 0) ? [{
-              type: 'box',
-              layout: 'vertical',
-              margin: 'lg',
-              contents: [
-                { type: 'text', text: `📝 หมายเหตุ: ${bill.remarks}`, color: '#ef4444', size: 'xs', wrap: true }
-              ]
-            }] : [])
-          ]
+          contents: paymentBodyContents
         },
         footer: {
           type: 'box',
           layout: 'vertical',
           paddingAll: '16px',
-          spacing: 'sm',
           contents: [
             {
-              type: 'button',
-              style: 'primary',
-              color: '#4f46e5',
-              action: {
-                type: 'uri',
-                label: 'ดูรายละเอียดใบแจ้งหนี้',
-                uri: billDetailUrl
-              }
-            },
-            {
               type: 'text',
-              text: 'กรุณาชำระเงินภายในวันที่ 5 ของเดือน',
+              text: 'ชำระเงินแล้ว ส่งสลิปมาที่แชทนี้ได้เลยค่ะ',
               color: '#aaaaaa',
               size: 'xxs',
               align: 'center',
-              margin: 'md'
+              wrap: true
             }
           ]
         }
-      }
+      };
+
+      // ใช้ Carousel 2 bubbles
+      flexContents = {
+        type: 'carousel',
+        contents: [billBubble, paymentBubble]
+      };
+    } else {
+      // ไม่มีข้อมูลชำระ → ส่งเฉพาะ bubble เดียว
+      flexContents = billBubble;
+    }
+
+    const flexMessage = {
+      type: 'flex',
+      altText: `ใบแจ้งหนี้ค่าเช่า ห้อง ${roomNumber} ประจำเดือน ${thaiMonth} — ยอดรวม ฿${totalAmount}`,
+      contents: flexContents
     };
 
     await linePush(lineUserId, [flexMessage]);
